@@ -1,25 +1,29 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Text, View, StyleSheet, Button, SafeAreaView, TouchableOpacity, Image, TextInput } from 'react-native';
-import { db, storage } from '../firebase';
+import { Text, View, StyleSheet, Button, SafeAreaView, TouchableOpacity, Image, TextInput, Alert } from 'react-native';
+import { db, storage, firebaseAuth } from '../firebase'; // Brug auth her
 import { ref, set, push } from 'firebase/database';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Camera } from 'expo-camera/legacy';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { useNavigation } from '@react-navigation/native';
 
 const CreateLoginPage = () => {
+  const [isLogin, setIsLogin] = useState(true); 
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
   const [study, setStudy] = useState('');
   const [studyDirection, setStudyDirection] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [profileImage, setProfileImage] = useState(null);
   const [role, setRole] = useState('');
   const [hasPermission, setHasPermission] = useState(null);
   const cameraRef = useRef();
   const [type, setType] = useState("back");
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const navigation = useNavigation();
 
-  // Anmod om kamera-tilladelse ved opstart
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
@@ -27,54 +31,63 @@ const CreateLoginPage = () => {
     })();
   }, []);
 
-  // Håndterer brugerregistrering og upload af profilbillede
   const handleRegister = async () => {
-    if (!name || !age || !study || !studyDirection || !email || !role) {
+    if (!name || !age || !study || !studyDirection || !email || !password || !role) {
       alert("Please fill all fields");
       return;
     }
 
-    let imageUrl = '';
-    if (profileImage) {
-      const imageRef = storageRef(storage, `profileImages/${Date.now()}_${name}`);
-      const response = await fetch(profileImage);
-      const blob = await response.blob();
-      await uploadBytes(imageRef, blob);
-      imageUrl = await getDownloadURL(imageRef);
-    }
+    try {
+      const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
+      const userId = userCredential.user.uid;
 
-    const userPath = role === "student" ? "students" : "tutors";
-    const newUserRef = push(ref(db, userPath));
-    const userId = newUserRef.key;
+      let imageUrl = '';
+      if (profileImage) {
+        const imageRef = storageRef(storage, `profileImages/${Date.now()}_${name}`);
+        const response = await fetch(profileImage);
+        const blob = await response.blob();
+        await uploadBytes(imageRef, blob);
+        imageUrl = await getDownloadURL(imageRef);
+      }
 
-    set(newUserRef, {
-      name,
-      age,
-      study,
-      studyDirection,
-      email,
-      profileImage: imageUrl,
-    }).then(() => {
+      const userPath = role === "student" ? "students" : "tutors";
+      await set(ref(db, `${userPath}/${userId}`), {
+        name,
+        age,
+        study,
+        studyDirection,
+        email,
+        profileImage: imageUrl,
+      });
+
       alert('User registered successfully!');
       clearForm();
-    }).catch((error) => {
-      console.error("Error saving data: ", error);
-      alert('Failed to register user.');
-    });
+    } catch (error) {
+      alert("Registration failed: " + error.message);
+    }
   };
 
-  // Nulstiller formularen
+const handleLogin = async () => {
+    try {
+      await signInWithEmailAndPassword(firebaseAuth, email, password);
+      Alert.alert("Login successful");
+      navigation.navigate("Dashboard"); 
+    } catch (error) {
+      Alert.alert("Login failed", error.message);
+    }
+  };
+
   const clearForm = () => {
     setName("");
     setAge("");
     setStudy("");
     setStudyDirection("");
     setEmail("");
+    setPassword("");
     setProfileImage(null);
     setRole("");
   };
 
-  // Åbn kameraet, hvis tilladelse er givet
   const openCamera = () => {
     if (hasPermission === false) {
       alert("Camera permission is required");
@@ -83,7 +96,6 @@ const CreateLoginPage = () => {
     setIsCameraOpen(true);
   };
 
-  // Tag billede og gem som profilbillede
   const snap = async () => {
     if (cameraRef.current) {
       const result = await cameraRef.current.takePictureAsync();
@@ -92,7 +104,6 @@ const CreateLoginPage = () => {
     }
   };
 
-  // Skift mellem front- og bagkamera
   const toggleCameraType = () => {
     setType(type === "back" ? "front" : "back");
   };
@@ -113,44 +124,59 @@ const CreateLoginPage = () => {
   return (
     <SafeAreaView style={styles.safeview}>
       <View style={styles.container}>
-        <Text style={styles.title}>Create Account</Text>
-        <TextInput placeholder="Name" value={name} onChangeText={setName} style={styles.input} />
-        <TextInput placeholder="Age" value={age} onChangeText={setAge} keyboardType="numeric" style={styles.input} />
-        <TextInput placeholder="Study" value={study} onChangeText={setStudy} style={styles.input} />
-        <TextInput placeholder="Study Direction" value={studyDirection} onChangeText={setStudyDirection} style={styles.input} />
+        <Text style={styles.title}>{isLogin ? "Login" : "Create Account"}</Text>
+        
+        {/* Fælles email og password input */}
         <TextInput placeholder="Email" value={email} onChangeText={setEmail} keyboardType="email-address" style={styles.input} />
+        <TextInput placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry={true} style={styles.input} />
 
-        <View style={styles.roleContainer}>
-          <TouchableOpacity onPress={() => setRole("tutor")}>
-            <Text style={[styles.role, role === "tutor" && styles.selectedRole]}>Tutor</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setRole("student")}>
-            <Text style={[styles.role, role === "student" && styles.selectedRole]}>Student</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Vises kun i oprettelsestilstand */}
+        {!isLogin && (
+          <>
+            <TextInput placeholder="Name" value={name} onChangeText={setName} style={styles.input} />
+            <TextInput placeholder="Age" value={age} onChangeText={setAge} keyboardType="numeric" style={styles.input} />
+            <TextInput placeholder="Study" value={study} onChangeText={setStudy} style={styles.input} />
+            <TextInput placeholder="Study Direction" value={studyDirection} onChangeText={setStudyDirection} style={styles.input} />
 
-        <TouchableOpacity onPress={openCamera} style={styles.imagePicker}>
-          <Text style={styles.imagePickerText}>Open Camera</Text>
-        </TouchableOpacity>
-
-        {profileImage && (
-          <Image source={{ uri: profileImage }} style={styles.profileImage} />
-        )}
-
-        {isCameraOpen && (
-          <Camera style={styles.camera} type={type} ref={cameraRef}>
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity style={styles.flipbtn} onPress={toggleCameraType}>
-                <Ionicons name="camera-reverse-outline" size={32} color="#fff" />
+            <View style={styles.roleContainer}>
+              <TouchableOpacity onPress={() => setRole("tutor")}>
+                <Text style={[styles.role, role === "tutor" && styles.selectedRole]}>Tutor</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.snapbtn} onPress={snap}>
-                <Text style={styles.text}>Take Photo</Text>
+              <TouchableOpacity onPress={() => setRole("student")}>
+                <Text style={[styles.role, role === "student" && styles.selectedRole]}>Student</Text>
               </TouchableOpacity>
             </View>
-          </Camera>
+
+            <TouchableOpacity onPress={openCamera} style={styles.imagePicker}>
+              <Text style={styles.imagePickerText}>Open Camera</Text>
+            </TouchableOpacity>
+
+            {profileImage && (
+              <Image source={{ uri: profileImage }} style={styles.profileImage} />
+            )}
+
+            {isCameraOpen && (
+              <Camera style={styles.camera} type={type} ref={cameraRef}>
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity style={styles.flipbtn} onPress={toggleCameraType}>
+                    <Ionicons name="camera-reverse-outline" size={32} color="#fff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.snapbtn} onPress={snap}>
+                    <Text style={styles.text}>Take Photo</Text>
+                  </TouchableOpacity>
+                </View>
+              </Camera>
+            )}
+          </>
         )}
 
-        <Button title="Register" onPress={handleRegister} />
+        {/* Viser knap afhængigt af tilstand */}
+        <Button title={isLogin ? "Login" : "Register"} onPress={isLogin ? handleLogin : handleRegister} />
+
+        {/* Knap til at skifte mellem Login og Oprettelse */}
+        <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
+          <Text style={styles.switchText}>{isLogin ? "Don't have an account? Register" : "Already have an account? Login"}</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -171,6 +197,7 @@ const styles = StyleSheet.create({
   buttonContainer: { flexDirection: 'row', justifyContent: 'space-between', padding: 10 },
   snapbtn: { backgroundColor: 'black', padding: 10, borderRadius: 50 },
   flipbtn: { backgroundColor: 'black', padding: 10, borderRadius: 50 },
+  switchText: { color: 'blue', textAlign: 'center', marginTop: 10 },
 });
 
 export default CreateLoginPage;

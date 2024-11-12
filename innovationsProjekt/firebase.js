@@ -1,10 +1,12 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase } from 'firebase/database';
-import { getStorage } from 'firebase/storage'; // Importér Firebase Storage
+import { getStorage } from 'firebase/storage';
+import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Firebase konfiguration
 const firebaseConfig = {
-  apiKey: "API_KEY",
+  apiKey: "AIzaSyDaXVV5IYG9jVe2hqyunWsMD3dN-HgmMTA",
   authDomain: "tutormatch3520-7cf45.firebaseapp.com",
   databaseURL: "https://tutormatch3520-7cf45-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "tutormatch3520-7cf45",
@@ -22,5 +24,10 @@ const db = getDatabase(app);
 // Få reference til Firebase Storage
 const storage = getStorage(app);
 
-// Eksporter database og storage
-export { db, storage };
+// Initialiser Auth med AsyncStorage-persistence, og giv det et unikt navn, fx firebaseAuth
+const firebaseAuth = initializeAuth(app, {
+  persistence: getReactNativePersistence(AsyncStorage)
+});
+
+// Eksporter database, storage og firebaseAuth
+export { db, storage, firebaseAuth };
