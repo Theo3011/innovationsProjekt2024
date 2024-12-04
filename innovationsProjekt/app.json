@@ -32,6 +32,13 @@
           "recordAudioAndroid": true
         }
       ]
-    ]
+    ],
+    "newArchEnabled": true,
+    "extra": {
+      "expoCameraLegacyWarning": false
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    }
   }
 }

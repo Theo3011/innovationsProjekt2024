@@ -3,7 +3,7 @@ import { Text, View, StyleSheet, Button, SafeAreaView, TouchableOpacity, Image, 
 import { db, storage, firebaseAuth } from '../firebase'; // Brug auth her
 import { ref, set, push } from 'firebase/database';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Camera } from 'expo-camera/legacy';
+import { Camera } from 'expo-camera';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { useNavigation } from '@react-navigation/native';
