@@ -1,31 +1,30 @@
-// Import necessary modules
+// Import nødvendige moduler
 import React from "react";
 import { StatusBar } from "expo-status-bar";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Ionicons } from "@expo/vector-icons"; // You can use Ionicons for tab icons
+import { Ionicons } from "@expo/vector-icons";
 
-// Import screens based on your file structure
+// Import af skærme
 import LoginCreatePage from "./components/loginCreatePage";
-import DashBoard from "./components/dashBoard"; // The dashboard component
-import ChatPage from "./components/chatPage"; // Chat screen
-import Settings from "./components/settings"; // Settings screen
-import OfferPage from "./components/offerPage"; // Offer page screen
-import CreateOfferPage from "./components/createOfferPage"; // Create offer page screen
+import DashBoard from "./components/dashBoard";
+import ChatPage from "./components/chatPage";
+import Settings from "./components/settings";
+import CreateOfferPage from "./components/createOfferPage";
 
-// Initialize navigators
+// Initialiser navigatører
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
+// AppTabs komponenten for bundenavigation
 function AppTabs() {
   return (
     <Tab.Navigator
-      initialRouteName="Home" // Set Dashboard as the initial screen in tab navigation
+      initialRouteName="Home"
       screenOptions={({ route }) => ({
         tabBarIcon: ({ color, size }) => {
           let iconName;
-
           if (route.name === "Home") {
             iconName = "home";
           } else if (route.name === "Min profil") {
@@ -35,13 +34,11 @@ function AppTabs() {
           } else if (route.name === "Indstillinger") {
             iconName = "settings";
           }
-
           return <Ionicons name={iconName} size={size} color={color} />;
         },
       })}
     >
-      <Tab.Screen name="Home" component={DashBoard} />{" "}
-      {/* Use Dashboard as the Home screen */}
+      <Tab.Screen name="Home" component={DashBoard} />
       <Tab.Screen name="Min profil" component={CreateOfferPage} />
       <Tab.Screen name="Chat" component={ChatPage} />
       <Tab.Screen name="Indstillinger" component={Settings} />
@@ -49,6 +46,7 @@ function AppTabs() {
   );
 }
 
+// App komponenten med stack navigation
 export default function App() {
   return (
     <NavigationContainer>
@@ -58,9 +56,10 @@ export default function App() {
           component={LoginCreatePage}
           options={{ title: "Login / Create Account" }}
         />
+        {/* AppTabs skal være en Screen i stack navigation */}
         <Stack.Screen
           name="Dashboard"
-          component={AppTabs} // Use the Tab Navigator (AppTabs) as the Dashboard screen
+          component={AppTabs}
           options={{ title: "Dashboard" }}
         />
       </Stack.Navigator>
