@@ -218,50 +218,89 @@ const CreateLoginPage = () => {
             )}
           </>
         )}
-        <Button
-          title={isLogin ? "Login" : "Register"}
-          onPress={isLogin ? handleLogin : handleRegister}
-        />
-        <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
-          <Text style={styles.switchText}>
-            {isLogin
-              ? "Don't have an account? Sign Up"
-              : "Already have an account? Log In"}
-          </Text>
-        </TouchableOpacity>
+<TouchableOpacity
+  style={styles.button}
+  onPress={isLogin ? handleLogin : handleRegister}
+>
+  <Text style={styles.buttonText}>
+    {isLogin ? "Login" : "Register"}
+  </Text>
+</TouchableOpacity>
+<TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
+  <Text style={styles.switchText}>
+    {isLogin
+      ? "Don't have an account? Sign Up"
+      : "Already have an account? Log In"}
+  </Text>
+</TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 };
+export default CreateLoginPage;
+
 
 const styles = StyleSheet.create({
-  safeview: { flex: 1, backgroundColor: "#f5f5f5" },
+  safeview: { 
+    flex: 1, 
+    backgroundColor: "#f5f5f5" 
+  },
   container: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
+    backgroundColor: "#ffffff", // Ensartet baggrund
+    borderRadius: 10, // Let runding af hjørner
   },
-  title: { fontSize: 30, fontWeight: "bold", marginBottom: 30 },
+  title: { 
+    fontSize: 30, 
+    fontWeight: "bold", 
+    marginBottom: 30, 
+    color: "#333" // Tilføjet mørkere tekstfarve
+  },
   input: {
-    width: "100%",
-    padding: 10,
+    width: "90%", // Mindsket bredde for at passe bedre på små skærme
+    padding: 12,
     marginBottom: 15,
     backgroundColor: "#fff",
-    borderRadius: 5,
+    borderRadius: 8,
     borderColor: "#ccc",
     borderWidth: 1,
+    fontSize: 16,
+    color: "#555",
   },
   imagePicker: {
-    padding: 10,
+    padding: 15,
     backgroundColor: "#007BFF",
-    borderRadius: 5,
-    marginBottom: 15,
+    borderRadius: 8,
+    marginBottom: 20,
+    width: "90%",
+    alignItems: "center",
   },
-  imagePickerText: { color: "white", fontWeight: "bold", textAlign: "center" },
-  profileImage: { width: 100, height: 100, borderRadius: 50, marginTop: 20 },
-  role: { fontSize: 18, padding: 10, borderRadius: 5, color: "#888" },
-  selectedRole: { backgroundColor: "#4CAF50", color: "white" },
+  imagePickerText: { 
+    color: "white", 
+    fontWeight: "bold", 
+    fontSize: 16 
+  },
+  profileImage: { 
+    width: 100, 
+    height: 100, 
+    borderRadius: 50, 
+    marginTop: 20, 
+    borderColor: "#007BFF", 
+    borderWidth: 2,
+  },
+  role: { 
+    fontSize: 18, 
+    padding: 12, 
+    borderRadius: 8, 
+    color: "#888" 
+  },
+  selectedRole: { 
+    backgroundColor: "#4CAF50", 
+    color: "white" 
+  },
   roleContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -274,6 +313,17 @@ const styles = StyleSheet.create({
     color: "#007BFF",
     fontSize: 16,
   },
+  button: {
+    backgroundColor: "#28A745",
+    padding: 15,
+    borderRadius: 8,
+    width: "90%",
+    alignItems: "center",
+    marginVertical: 10,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
 });
-
-export default CreateLoginPage;
