@@ -9,10 +9,9 @@ import {
 import { Ionicons } from "@expo/vector-icons"; // Import Ionicons for ikonet
 import { useNavigation } from "@react-navigation/native";
 
-const Dashboard = () => {
+const Dashboard = ({ navigation }) => {
   const [selectedTab, setSelectedTab] = useState("Tutor"); // State til at holde styr på valgt overskrift
 
-  const navigation = useNavigation();
   return (
     <View style={styles.container}>
       {/* To trykbare overskrifter */}
@@ -67,7 +66,7 @@ const Dashboard = () => {
       {/* Tilføj opslag knap */}
       <TouchableOpacity
         style={styles.addButton}
-        onPress={() => navigation.navigate("Tilføj opslag")}
+        onPress={() => navigation.navigate("OfferPage")} // Naviger til OfferPage
       >
         <Ionicons name="add-circle" size={24} color="white" />
         <Text style={styles.addButtonText}>Tilføj opslag</Text>

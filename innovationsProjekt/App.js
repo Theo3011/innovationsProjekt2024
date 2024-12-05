@@ -13,6 +13,7 @@ import ChatPage from "./components/chatPage";
 import Settings from "./components/settings";
 import CreateOfferPage from "./components/createOfferPage";
 import OfferPage from "./components/offerPage";
+
 // Initialiser navigatører
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -39,7 +40,7 @@ function AppTabs() {
       })}
     >
       <Tab.Screen
-        name="Home" // Unikt navn til bundnavigationens "Dashboard"
+        name="Home"
         component={DashBoard}
         options={{ headerShown: false }}
       />
@@ -58,11 +59,6 @@ function AppTabs() {
         component={Settings}
         options={{ headerShown: false }}
       />
-      <Tab.Screen
-        name="Tilføj opslag"
-        component={OfferPage}
-        options={{ headerShown: false }}
-      />
     </Tab.Navigator>
   );
 }
@@ -77,11 +73,15 @@ export default function App() {
           component={LoginCreatePage}
           options={{ title: "Login / Create Account" }}
         />
-        {/* AppTabs skal være en Screen i stack navigation */}
         <Stack.Screen
-          name="MainApp" // Unikt navn til stackens "Dashboard"
+          name="MainApp" // Hovednavigering med bundnavigation
           component={AppTabs}
           options={{ title: "TutorMatch" }}
+        />
+        <Stack.Screen
+          name="OfferPage" // Tilføj opslag som en stack-skærm
+          component={OfferPage}
+          options={{ title: "Tilføj opslag" }}
         />
       </Stack.Navigator>
       <StatusBar style="auto" />
