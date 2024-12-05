@@ -14,6 +14,7 @@ import Settings from "./components/settings";
 import ProfilePage from "./components/profilePage";
 import OfferPage from "./components/offerPage";
 import PrivateChat from "./components/privateChat";
+import viewOffer from "./components/viewOffer"
 
 // Initialiser navigatører
 const Stack = createStackNavigator();
@@ -88,6 +89,11 @@ export default function App() {
           name="PrivateChat"
           component={PrivateChat}
           options={{ title: "Private Chat" }}
+        />
+        <Stack.Screen
+          name="ViewOffer"
+          component={viewOffer}
+          options={{ title: "Vis opslag" }}
         />
       </Stack.Navigator>
       <StatusBar style="auto" />

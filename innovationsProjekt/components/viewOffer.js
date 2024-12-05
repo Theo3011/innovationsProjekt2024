@@ -18,7 +18,6 @@ const ViewOffer = ({ route }) => {
       <Text style={styles.header}>Tutor opslag</Text>
       <View style={styles.profileSection}>
         <Image
-          source={require("../assets/profile-placeholder.png")} // Placeholder billede
           style={styles.profileImage}
         />
         <View style={styles.details}>

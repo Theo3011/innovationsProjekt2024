@@ -34,43 +34,48 @@ const Dashboard = () => {
   }, []);
 
   return (
-    <ScrollView style={styles.list}>
-      {offers.map((offer) => (
-        <View key={offer.id} style={styles.card}>
-          <View style={styles.profileImage}></View>
-          <View style={styles.cardContent}>
-            <Text>Name: {offer.name}</Text>
-            <Text>Eksamen: {offer.exam}</Text>
-            <Text>Pris/time: {offer.price} DKK</Text>
-            <Text>Undervisningstype: {offer.type}</Text>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() =>
-                navigation.navigate("ViewOffer", {
-                  name: offer.name,
-                  exam: offer.exam,
-                  price: offer.price,
-                  type: offer.type,
-                  description: offer.description,
-                })
-              }
-            >
-              <Text style={styles.buttonText}>Vis opslag</Text>
-            </TouchableOpacity>
+    <View style={styles.container}>
+      <ScrollView style={styles.list}>
+        {offers.map((offer) => (
+          <View key={offer.id} style={styles.card}>
+            <View style={styles.profileImage}></View>
+            <View style={styles.cardContent}>
+              <Text>Name: {offer.name}</Text>
+              <Text>Eksamen: {offer.exam}</Text>
+              <Text>Pris/time: {offer.price} DKK</Text>
+              <Text>Undervisningstype: {offer.type}</Text>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={() =>
+                  navigation.navigate("ViewOffer", {
+                    name: offer.name,
+                    exam: offer.exam,
+                    price: offer.price,
+                    type: offer.type,
+                    description: offer.description,
+                  })
+                }
+              >
+                <Text style={styles.buttonText}>Vis opslag</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      ))}
-    </ScrollView>
+        ))}
+      </ScrollView>
+
+      {/* Tilføj opslag knap */}
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => navigation.navigate("OfferPage")} // Naviger til OfferPage
+      >
+        <Text style={styles.addButtonText}>+ Opret opslag</Text>
+      </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
-  header: { fontSize: 20, fontWeight: "bold", margin: 10, textAlign: "center" },
-  tabs: { flexDirection: "row", justifyContent: "center", marginBottom: 10 },
-  tab: { marginHorizontal: 10 },
-  tabText: { fontSize: 16, fontWeight: "normal", color: "black" },
-  tabTextSelected: { fontWeight: "bold", color: "blue" }, // Gør valgt tekst fed og blå
   list: { flex: 1, paddingHorizontal: 10 },
   card: {
     flexDirection: "row",
@@ -95,25 +100,21 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   buttonText: { color: "#fff", textAlign: "center" },
-
-  // Tilføj opslag knap styling
   addButton: {
     position: "absolute",
-    bottom: 20, // Placeret 20 pixels over bunden
-    right: 20, // Placeret 20 pixels fra højre kant
-    flexDirection: "row",
-    alignItems: "center",
+    bottom: 20,
+    right: 20,
     backgroundColor: "#007bff",
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 25,
-    elevation: 5, // Gør knappen lidt "hævet"
+    padding: 15,
+    borderRadius: 50,
+    elevation: 5,
+    alignItems: "center",
+    justifyContent: "center",
   },
   addButtonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
-    marginLeft: 10, // Lidt afstand mellem ikonet og teksten
   },
 });
 
