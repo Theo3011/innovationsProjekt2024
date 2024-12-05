@@ -1,160 +1,102 @@
 import React, { useState, useEffect } from "react";
 import {
   View,
-  TextInput,
-  Button,
-  FlatList,
   Text,
-  KeyboardAvoidingView,
-  Platform,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
 } from "react-native";
-import { getDatabase, ref, push, onValue, remove } from "firebase/database";
-
-// Formaterer timestamps til læsbart format
-const formatTimestamp = (timestamp) => {
-  const date = new Date(timestamp);
-  return `${date.getHours()}:${date.getMinutes().toString().padStart(2, "0")}`;
-};
-
-// Farver, som du tidligere har defineret i globalStyles
-const colors = {
-  primary: "#4CAF50",
-  button: "#1E88E5",
-  placeholder: "#BDBDBD",
-  background: "#F0F0F0",
-  text: "#000000",
-  timestamp: "#757575",
-};
+import { getDatabase, ref, onValue } from "firebase/database";
+import { useNavigation } from "@react-navigation/native";
 
 const ChatPage = () => {
-  const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState([]);
+  const [chats, setChats] = useState([]);
+  const navigation = useNavigation();
   const db = getDatabase();
 
-  // Henter beskeder fra Firebase ved komponentens indlæsning
   useEffect(() => {
-    const messagesRef = ref(db, "messages");
-
-    const unsubscribe = onValue(messagesRef, (snapshot) => {
+    const chatsRef = ref(db, "chats");
+    const unsubscribe = onValue(chatsRef, (snapshot) => {
       const data = snapshot.val();
-      const now = Date.now();
-
       if (data) {
-        const loadedMessages = Object.keys(data).map((key) => {
-          const messageData = data[key];
-          // Fjerner beskeder, der er ældre end 10 minutter
-          if (now - messageData.timestamp > 10 * 60 * 1000) {
-            remove(ref(db, `messages/${key}`));
-          }
-          return {
-            id: key,
-            text: messageData.text,
-            timestamp: messageData.timestamp,
-          };
-        });
-        setMessages(loadedMessages.reverse());
+        const loadedChats = Object.keys(data).map((key) => ({
+          id: key,
+          name: data[key].name,
+          latestMessage: data[key].latestMessage || "No messages yet",
+          timestamp: data[key].timestamp,
+        }));
+        setChats(loadedChats);
       }
     });
-
     return () => unsubscribe();
   }, []);
 
-  // Sender en besked til Firebase
-  const sendMessage = () => {
-    if (message.trim().length > 0) {
-      try {
-        const messagesRef = ref(db, "messages");
-        push(messagesRef, {
-          text: message,
-          timestamp: Date.now(), // Gemmer tidsstempel sammen med beskeden
-        })
-          .then(() => {
-            setMessage(""); // Rydder inputfeltet efter sending
-          })
-          .catch((error) => {
-            console.error("Error setting message data:", error);
-          });
-      } catch (error) {
-        console.error("Error initializing database reference:", error);
-      }
-    }
+  const handleChatPress = (chatId, chatName) => {
+    navigation.navigate("PrivateChat", { chatId, chatName });
   };
 
-  // render chatgrænsefladen
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
+    <View style={styles.container}>
+      <Text style={styles.title}>Chat</Text>
       <FlatList
-        data={messages} // Viser chatbeskeder
+        data={chats}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={styles.messageContainer}>
-            <Text style={styles.messageText}>{item.text}</Text>
-            <Text style={styles.timestampText}>
-              {formatTimestamp(item.timestamp)}
-            </Text>
-          </View>
+          <TouchableOpacity
+            style={styles.chatItem}
+            onPress={() => handleChatPress(item.id, item.name)}
+          >
+            <View style={styles.chatDetails}>
+              <Text style={styles.chatName}>{item.name}</Text>
+              <Text style={styles.latestMessage}>{item.latestMessage}</Text>
+            </View>
+            <Text style={styles.timestamp}>{item.timestamp}</Text>
+          </TouchableOpacity>
         )}
-        inverted // Vender listen om, så nyeste beskeder vises øverst
       />
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Skriv en besked..."
-          placeholderTextColor={colors.placeholder}
-          value={message}
-          onChangeText={setMessage}
-        />
-        <Button title="Send" color={colors.button} onPress={sendMessage} />
-      </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 };
 
-// Inline-styles for komponenten
-const styles = {
+const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: "#f5f5f5",
     padding: 10,
   },
-  messageContainer: {
-    marginVertical: 5,
-    padding: 10,
-    backgroundColor: "#FFF",
-    borderRadius: 5,
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  chatItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 15,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    marginBottom: 10,
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
+    elevation: 2,
   },
-  messageText: {
-    fontSize: 16,
-    color: colors.text,
-  },
-  timestampText: {
-    fontSize: 12,
-    color: colors.timestamp,
-    marginTop: 5,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingTop: 10,
-    paddingBottom: 10,
-  },
-  input: {
+  chatDetails: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: colors.placeholder,
-    borderRadius: 5,
-    padding: 10,
-    marginRight: 10,
-    fontSize: 16,
   },
-};
+  chatName: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  latestMessage: {
+    fontSize: 14,
+    color: "#757575",
+  },
+  timestamp: {
+    fontSize: 12,
+    color: "#757575",
+  },
+});
 
 export default ChatPage;

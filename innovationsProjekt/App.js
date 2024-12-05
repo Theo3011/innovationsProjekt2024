@@ -11,8 +11,9 @@ import LoginCreatePage from "./components/loginCreatePage";
 import DashBoard from "./components/dashBoard";
 import ChatPage from "./components/chatPage";
 import Settings from "./components/settings";
-import CreateOfferPage from "./components/createOfferPage";
+import ProfilePage from "./components/profilePage";
 import OfferPage from "./components/offerPage";
+import PrivateChat from "./components/privateChat";
 
 // Initialiser navigatører
 const Stack = createStackNavigator();
@@ -46,7 +47,7 @@ function AppTabs() {
       />
       <Tab.Screen
         name="Min profil"
-        component={CreateOfferPage}
+        component={ProfilePage}
         options={{ headerShown: false }}
       />
       <Tab.Screen
@@ -82,6 +83,11 @@ export default function App() {
           name="OfferPage" // Tilføj opslag som en stack-skærm
           component={OfferPage}
           options={{ title: "Tilføj opslag" }}
+        />
+        <Stack.Screen
+          name="PrivateChat"
+          component={PrivateChat}
+          options={{ title: "Private Chat" }}
         />
       </Stack.Navigator>
       <StatusBar style="auto" />
