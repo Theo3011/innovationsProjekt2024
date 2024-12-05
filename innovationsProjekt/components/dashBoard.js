@@ -77,6 +77,7 @@ const Dashboard = () => {
                     price: offer.price,
                     type: offer.type,
                     description: offer.description,
+                    receiverId: offer.createdBy,
                   })
                 }
               >

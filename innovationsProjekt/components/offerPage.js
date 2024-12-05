@@ -9,7 +9,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
-  Keyboard,
   Alert,
 } from "react-native";
 import { Dropdown } from "react-native-element-dropdown"; // Dropdown komponent
@@ -18,27 +17,70 @@ import { db, firebaseAuth } from "../firebase"; // Importer Firebase config
 import { ref, push } from "firebase/database"; // For at gemme data i databasen
 
 const OfferPage = () => {
-  const [university, setUniversity] = useState("");
-  const [studyLine, setStudyLine] = useState("");
-  const [price, setPrice] = useState("");
-  const [description, setDescription] = useState("");
-  const [selectedType, setSelectedType] = useState(null);
+  const [university, setUniversity] = useState(""); // Valgte universitet
+  const [studyLine, setStudyLine] = useState(""); // Valgte studielinje
+  const [price, setPrice] = useState(""); // Valgte pris
+  const [description, setDescription] = useState(""); // Beskrivelse
+  const [selectedType, setSelectedType] = useState(null); // Undervisningstype (gruppe/individuel)
 
-  // Dropdown data
+  // Universitetsdata
   const universityData = [
-    { label: "Universitet 1", value: "uni1" },
-    { label: "Universitet 2", value: "uni2" },
+    { label: "Aarhus Universitet (AU)", value: "au" },
+    { label: "Københavns Universitet (KU)", value: "ku" },
+    { label: "Syddansk Universitet (SDU)", value: "sdu" },
+    { label: "Aalborg Universitet (AAU)", value: "aau" },
+    { label: "Roskilde Universitet (RUC)", value: "ruc" },
+    { label: "Danmarks Tekniske Universitet (DTU)", value: "dtu" },
+    { label: "IT-Universitetet i København (ITU)", value: "itu" },
+    { label: "CBS - Copenhagen Business School", value: "cbs" },
   ];
 
-  const studyLineData = [
-    { label: "Studie-linje 1", value: "line1" },
-    { label: "Studie-linje 2", value: "line2" },
-  ];
+  // Studielinjer til hvert universitet
+  const studyLineData = {
+    au: [
+      { label: "Matematik", value: "math" },
+      { label: "Datalogi", value: "cs" },
+      { label: "Økonomi", value: "economics" },
+    ],
+    ku: [
+      { label: "Jura", value: "law" },
+      { label: "Medicin", value: "medicine" },
+      { label: "Biologi", value: "biology" },
+    ],
+    sdu: [
+      { label: "Erhvervsøkonomi", value: "business" },
+      { label: "Ingeniørvidenskab", value: "engineering" },
+    ],
+    aau: [
+      { label: "Elektronik og IT", value: "eit" },
+      { label: "Arkitektur", value: "architecture" },
+    ],
+    ruc: [
+      { label: "Socialvidenskab", value: "social" },
+      { label: "Humaniora", value: "humanities" },
+    ],
+    dtu: [
+      { label: "Bygningsingeniør", value: "civilEng" },
+      { label: "Maskiningeniør", value: "mechEng" },
+    ],
+    itu: [
+      { label: "Softwareudvikling", value: "software" },
+      { label: "Digitale Medier", value: "digitalMedia" },
+    ],
+    cbs: [
+      { label: "International Business", value: "intBusiness" },
+      { label: "Finansiering", value: "finance" },
+      { label: "Ha It.", value: "Ha It." },
+    ],
+  };
 
+  // Priser
   const priceData = [
-    { label: "100 kr/t", value: "100" },
+    { label: "150 kr/t", value: "150" },
     { label: "200 kr/t", value: "200" },
+    { label: "250 kr/t", value: "250" },
     { label: "300 kr/t", value: "300" },
+    { label: "350 kr/t", value: "350" },
   ];
 
   // Håndter valg af undervisningstype
@@ -46,7 +88,7 @@ const OfferPage = () => {
     setSelectedType(type);
   };
 
-  // Funktion til at gemme opslag i Firebase
+  // Gem opslag i Firebase
   const saveOfferToDatabase = async () => {
     if (!selectedType || !university || !studyLine || !price || !description) {
       Alert.alert("Fejl", "Udfyld venligst alle felterne!");
@@ -54,7 +96,6 @@ const OfferPage = () => {
     }
 
     try {
-      // Hent nuværende bruger-ID
       const currentUser = firebaseAuth.currentUser;
       if (!currentUser) {
         Alert.alert(
@@ -66,24 +107,22 @@ const OfferPage = () => {
 
       const userId = currentUser.uid;
 
-      // Strukturér dataene til databasen
       const offerData = {
-        type: selectedType, // gruppe/individuel
-        university: university,
-        studyLine: studyLine,
-        price: price,
-        description: description,
-        createdBy: userId, // Hvem der har oprettet opslaget
-        timestamp: Date.now(), // Tidsstempel
+        type: selectedType,
+        university,
+        studyLine,
+        price,
+        description,
+        createdBy: userId,
+        timestamp: Date.now(),
       };
 
-      // Gem data i Firebase Realtime Database
       const offerRef = ref(db, "offers");
-      await push(offerRef, offerData); // Push laver en unik nøgle til hvert opslag
+      await push(offerRef, offerData);
 
       Alert.alert("Succes", "Dit opslag er oprettet!");
 
-      // Ryd felterne efter upload
+      // Ryd felterne
       setSelectedType(null);
       setUniversity("");
       setStudyLine("");
@@ -152,7 +191,10 @@ const OfferPage = () => {
                 labelField="label"
                 valueField="value"
                 value={university}
-                onChange={(item) => setUniversity(item.value)}
+                onChange={(item) => {
+                  setUniversity(item.value); // Opdater universitet
+                  setStudyLine(""); // Nulstil studielinje
+                }}
                 renderLeftIcon={() => (
                   <AntDesign
                     style={styles.icon}
@@ -165,27 +207,29 @@ const OfferPage = () => {
             </View>
 
             {/* Studie-linje dropdown */}
-            <View style={styles.pickerContainer}>
-              <Text style={styles.pickerLabel}>Vælg Studie-linje</Text>
-              <Dropdown
-                style={styles.dropdown}
-                placeholderStyle={styles.placeholderStyle}
-                selectedTextStyle={styles.selectedTextStyle}
-                data={studyLineData}
-                labelField="label"
-                valueField="value"
-                value={studyLine}
-                onChange={(item) => setStudyLine(item.value)}
-                renderLeftIcon={() => (
-                  <AntDesign
-                    style={styles.icon}
-                    color="black"
-                    name="Safety"
-                    size={20}
-                  />
-                )}
-              />
-            </View>
+            {university && (
+              <View style={styles.pickerContainer}>
+                <Text style={styles.pickerLabel}>Vælg Studie-linje</Text>
+                <Dropdown
+                  style={styles.dropdown}
+                  placeholderStyle={styles.placeholderStyle}
+                  selectedTextStyle={styles.selectedTextStyle}
+                  data={studyLineData[university] || []} // Dynamisk data
+                  labelField="label"
+                  valueField="value"
+                  value={studyLine}
+                  onChange={(item) => setStudyLine(item.value)}
+                  renderLeftIcon={() => (
+                    <AntDesign
+                      style={styles.icon}
+                      color="black"
+                      name="Safety"
+                      size={20}
+                    />
+                  )}
+                />
+              </View>
+            )}
 
             {/* Pris dropdown */}
             <View style={styles.pickerContainer}>
@@ -235,6 +279,7 @@ const OfferPage = () => {
 };
 
 const styles = StyleSheet.create({
+  // Samme styles som før
   safeArea: { flex: 1, backgroundColor: "#fff" },
   container: { flex: 1, padding: 20 },
   scrollView: { flex: 1 },
