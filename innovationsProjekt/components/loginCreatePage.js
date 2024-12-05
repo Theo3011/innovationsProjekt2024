@@ -120,10 +120,7 @@ const CreateLoginPage = () => {
   // Handle login logic
   const handleLogin = async () => {
     try {
-      // Forsøger at logge brugeren ind
       await signInWithEmailAndPassword(firebaseAuth, email, password);
-      Alert.alert("Login successful");
-      // Navigerer til 'MainApp' efter succesfuldt login
       navigation.replace("MainApp");
     } catch (error) {
       Alert.alert("Login failed", error.message);
@@ -218,32 +215,31 @@ const CreateLoginPage = () => {
             )}
           </>
         )}
-<TouchableOpacity
-  style={styles.button}
-  onPress={isLogin ? handleLogin : handleRegister}
->
-  <Text style={styles.buttonText}>
-    {isLogin ? "Login" : "Register"}
-  </Text>
-</TouchableOpacity>
-<TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
-  <Text style={styles.switchText}>
-    {isLogin
-      ? "Don't have an account? Sign Up"
-      : "Already have an account? Log In"}
-  </Text>
-</TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={isLogin ? handleLogin : handleRegister}
+        >
+          <Text style={styles.buttonText}>
+            {isLogin ? "Login" : "Register"}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
+          <Text style={styles.switchText}>
+            {isLogin
+              ? "Don't have an account? Sign Up"
+              : "Already have an account? Log In"}
+          </Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 };
 export default CreateLoginPage;
 
-
 const styles = StyleSheet.create({
-  safeview: { 
-    flex: 1, 
-    backgroundColor: "#f5f5f5" 
+  safeview: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
   },
   container: {
     flex: 1,
@@ -253,11 +249,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff", // Ensartet baggrund
     borderRadius: 10, // Let runding af hjørner
   },
-  title: { 
-    fontSize: 30, 
-    fontWeight: "bold", 
-    marginBottom: 30, 
-    color: "#333" // Tilføjet mørkere tekstfarve
+  title: {
+    fontSize: 30,
+    fontWeight: "bold",
+    marginBottom: 30,
+    color: "#333", // Tilføjet mørkere tekstfarve
   },
   input: {
     width: "90%", // Mindsket bredde for at passe bedre på små skærme
@@ -278,28 +274,28 @@ const styles = StyleSheet.create({
     width: "90%",
     alignItems: "center",
   },
-  imagePickerText: { 
-    color: "white", 
-    fontWeight: "bold", 
-    fontSize: 16 
+  imagePickerText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
   },
-  profileImage: { 
-    width: 100, 
-    height: 100, 
-    borderRadius: 50, 
-    marginTop: 20, 
-    borderColor: "#007BFF", 
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginTop: 20,
+    borderColor: "#007BFF",
     borderWidth: 2,
   },
-  role: { 
-    fontSize: 18, 
-    padding: 12, 
-    borderRadius: 8, 
-    color: "#888" 
+  role: {
+    fontSize: 18,
+    padding: 12,
+    borderRadius: 8,
+    color: "#888",
   },
-  selectedRole: { 
-    backgroundColor: "#4CAF50", 
-    color: "white" 
+  selectedRole: {
+    backgroundColor: "#4CAF50",
+    color: "white",
   },
   roleContainer: {
     flexDirection: "row",
