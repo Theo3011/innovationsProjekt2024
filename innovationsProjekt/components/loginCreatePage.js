@@ -120,9 +120,11 @@ const CreateLoginPage = () => {
   // Handle login logic
   const handleLogin = async () => {
     try {
+      // Forsøger at logge brugeren ind
       await signInWithEmailAndPassword(firebaseAuth, email, password);
       Alert.alert("Login successful");
-      navigation.replace("Dashboard");
+      // Navigerer til 'MainApp' efter succesfuldt login
+      navigation.replace("MainApp");
     } catch (error) {
       Alert.alert("Login failed", error.message);
     }
