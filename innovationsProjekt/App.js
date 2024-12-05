@@ -12,7 +12,7 @@ import DashBoard from "./components/dashBoard";
 import ChatPage from "./components/chatPage";
 import Settings from "./components/settings";
 import CreateOfferPage from "./components/createOfferPage";
-
+import OfferPage from "./components/offerPage";
 // Initialiser navigatører
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -38,10 +38,31 @@ function AppTabs() {
         },
       })}
     >
-      <Tab.Screen name="Home" component={DashBoard} />
-      <Tab.Screen name="Min profil" component={CreateOfferPage} />
-      <Tab.Screen name="Chat" component={ChatPage} />
-      <Tab.Screen name="Indstillinger" component={Settings} />
+      <Tab.Screen
+        name="Home" // Unikt navn til bundnavigationens "Dashboard"
+        component={DashBoard}
+        options={{ headerShown: false }}
+      />
+      <Tab.Screen
+        name="Min profil"
+        component={CreateOfferPage}
+        options={{ headerShown: false }}
+      />
+      <Tab.Screen
+        name="Chat"
+        component={ChatPage}
+        options={{ headerShown: false }}
+      />
+      <Tab.Screen
+        name="Indstillinger"
+        component={Settings}
+        options={{ headerShown: false }}
+      />
+      <Tab.Screen
+        name="Tilføj opslag"
+        component={OfferPage}
+        options={{ headerShown: false }}
+      />
     </Tab.Navigator>
   );
 }
@@ -58,9 +79,9 @@ export default function App() {
         />
         {/* AppTabs skal være en Screen i stack navigation */}
         <Stack.Screen
-          name="Dashboard"
+          name="MainApp" // Unikt navn til stackens "Dashboard"
           component={AppTabs}
-          options={{ title: "Dashboard" }}
+          options={{ title: "TutorMatch" }}
         />
       </Stack.Navigator>
       <StatusBar style="auto" />

@@ -110,8 +110,9 @@ const CreateLoginPage = () => {
   const handleLogin = async () => {
     try {
       await signInWithEmailAndPassword(firebaseAuth, email, password);
-      Alert.alert("Login successful");
-      navigation.replace("Dashboard");
+      navigation.replace("MainApp", {
+        screen: "Home",
+      });
     } catch (error) {
       Alert.alert("Login failed", error.message);
     }
@@ -351,4 +352,3 @@ const styles = StyleSheet.create({
 });
 
 export default CreateLoginPage;
- 
