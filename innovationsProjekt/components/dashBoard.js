@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Text,
   View,
@@ -6,72 +6,61 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons"; // Import Ionicons for ikonet
+import { getDatabase, ref, onValue } from "firebase/database";
 import { useNavigation } from "@react-navigation/native";
 
-const Dashboard = ({ navigation }) => {
-  const [selectedTab, setSelectedTab] = useState("Tutor"); // State til at holde styr på valgt overskrift
+const Dashboard = () => {
+  const [offers, setOffers] = useState([]); // State til at holde data
+  const navigation = useNavigation();
+
+  // Hent data fra Firebase
+  useEffect(() => {
+    const db = getDatabase();
+    const offersRef = ref(db, "offers"); // Path i databasen
+
+    const unsubscribe = onValue(offersRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        // Konverter data til en liste
+        const offersArray = Object.keys(data).map((key) => ({
+          id: key,
+          ...data[key],
+        }));
+        setOffers(offersArray); // Opdater state
+      }
+    });
+
+    return () => unsubscribe(); // Ryd op efter listener
+  }, []);
 
   return (
-    <View style={styles.container}>
-      {/* To trykbare overskrifter */}
-      <View style={styles.tabs}>
-        <TouchableOpacity
-          style={styles.tab}
-          onPress={() => setSelectedTab("Tutor")}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              selectedTab === "Tutor" && styles.tabTextSelected,
-            ]}
-          >
-            Tutor
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.tab}
-          onPress={() => setSelectedTab("Studerende")}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              selectedTab === "Studerende" && styles.tabTextSelected,
-            ]}
-          >
-            Studerende
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Liste over opslag */}
-      <ScrollView style={styles.list}>
-        {[1, 2, 3].map((item, index) => (
-          <View key={index} style={styles.card}>
-            <View style={styles.profileImage}></View>
-            <View style={styles.cardContent}>
-              <Text>Name: "String"</Text>
-              <Text>Eksamen: "String"</Text>
-              <Text>Pris/time: DKK</Text>
-              <Text>Undervisningstype: (Gruppe-Individuel)</Text>
-              <TouchableOpacity style={styles.button}>
-                <Text style={styles.buttonText}>Vis opslag</Text>
-              </TouchableOpacity>
-            </View>
+    <ScrollView style={styles.list}>
+      {offers.map((offer) => (
+        <View key={offer.id} style={styles.card}>
+          <View style={styles.profileImage}></View>
+          <View style={styles.cardContent}>
+            <Text>Name: {offer.name}</Text>
+            <Text>Eksamen: {offer.exam}</Text>
+            <Text>Pris/time: {offer.price} DKK</Text>
+            <Text>Undervisningstype: {offer.type}</Text>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() =>
+                navigation.navigate("ViewOffer", {
+                  name: offer.name,
+                  exam: offer.exam,
+                  price: offer.price,
+                  type: offer.type,
+                  description: offer.description,
+                })
+              }
+            >
+              <Text style={styles.buttonText}>Vis opslag</Text>
+            </TouchableOpacity>
           </View>
-        ))}
-      </ScrollView>
-
-      {/* Tilføj opslag knap */}
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => navigation.navigate("OfferPage")} // Naviger til OfferPage
-      >
-        <Ionicons name="add-circle" size={24} color="white" />
-        <Text style={styles.addButtonText}>Tilføj opslag</Text>
-      </TouchableOpacity>
-    </View>
+        </View>
+      ))}
+    </ScrollView>
   );
 };
 
