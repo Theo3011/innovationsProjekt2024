@@ -91,7 +91,7 @@ export default function App() {
           options={{ title: "Private Chat" }}
         />
         <Stack.Screen
-          name="ViewOffer"
+          name="InfoToViewOffer"
           component={viewOffer}
           options={{ title: "Vis opslag" }}
         />

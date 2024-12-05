@@ -70,7 +70,7 @@ const Dashboard = () => {
               <TouchableOpacity
                 style={styles.button}
                 onPress={() =>
-                  navigation.navigate("ViewOffer", {
+                  navigation.navigate("InfoToViewOffer", {
                     name: studentNames[offer.createdBy] || "Ukendt bruger",
                     studyLine: offer.studyLine,
                     university: offer.university,
