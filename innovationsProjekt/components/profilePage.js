@@ -9,7 +9,7 @@ import {
   Alert,
   ScrollView,
 } from "react-native";
-import { getDatabase, ref, onValue, update, remove } from "firebase/database";
+import { getDatabase, ref, onValue, update } from "firebase/database";
 import { getAuth } from "firebase/auth";
 
 const ProfilePage = () => {
@@ -52,7 +52,8 @@ const ProfilePage = () => {
             .map((key) => ({ id: key, ...data[key] }))
             .filter(
               (session) =>
-                session.studentId === userId || session.tutorId === userId
+                session.student?.studentId === userId ||
+                session.tutor?.tutorId === userId
             );
           setUserSessions(filteredSessions);
         } else {
@@ -87,164 +88,132 @@ const ProfilePage = () => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007BFF" />
-        <Text style={styles.loadingText}>Loading profile...</Text>
-      </View>
-    );
-  }
-
-  if (!userData) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>No user data available.</Text>
+        <Text style={styles.loadingText}>Loading your sessions...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.scrollView}>
-      <View style={styles.safeview}>
-        <View style={styles.container}>
-          <Image
-            source={{
-              uri: userData.profileImage || "https://via.placeholder.com/100",
-            }}
-            style={styles.profileImage}
-          />
-
-          <Text style={styles.infoText}>
-            <Text style={styles.label}>Name: </Text>
-            {userData.name || "N/A"}
-          </Text>
-          <Text style={styles.infoText}>
-            <Text style={styles.label}>Age: </Text>
-            {userData.age || "N/A"}
-          </Text>
-          <Text style={styles.infoText}>
-            <Text style={styles.label}>University: </Text>
-            {userData.university || "N/A"}
-          </Text>
-          <Text style={styles.infoText}>
-            <Text style={styles.label}>Email: </Text>
-            {userData.email || "N/A"}
-          </Text>
-        </View>
-
-        <View style={styles.sessionContainer}>
-          <Text style={styles.sessionTitle}>Sessions</Text>
-          {userSessions.length > 0 ? (
-            userSessions.map((session) => (
-              <View key={session.id} style={styles.sessionBox}>
-                <Text style={styles.sessionText}>
-                  <Text style={styles.label}>Session ID: </Text>
-                  {session.id}
-                </Text>
-                <Text style={styles.sessionText}>
-                  <Text style={styles.label}>
-                    {userType === "tutor"
-                      ? "Student Message: "
-                      : "Tutor Name: "}
-                  </Text>
-                  {userType === "tutor"
-                    ? session.studentMessage
-                    : session.tutorName}
-                </Text>
-                <Text style={styles.sessionText}>
-                  <Text style={styles.label}>Date: </Text>
-                  {session.date}
-                </Text>
-                <Text style={styles.sessionText}>
-                  <Text style={styles.label}>Time: </Text>
-                  {session.time}
-                </Text>
-                {userType === "tutor" && session.status === "pending" && (
-                  <View style={styles.buttonContainer}>
-                    <TouchableOpacity
-                      style={[styles.button, styles.acceptButton]}
-                      onPress={() => handleSessionAction(session.id, "accept")}
-                    >
-                      <Text style={styles.buttonText}>Accept</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.button, styles.rejectButton]}
-                      onPress={() => handleSessionAction(session.id, "reject")}
-                    >
-                      <Text style={styles.buttonText}>Reject</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </View>
-            ))
-          ) : (
-            <Text>No sessions found.</Text>
-          )}
-        </View>
+    <ScrollView style={styles.container}>
+      <View style={styles.profileContainer}>
+        {userData && (
+          <View style={styles.profileInfo}>
+            <Image
+              source={{ uri: userData.profileImage }}
+              style={styles.profileImage}
+            />
+            <Text style={styles.userName}>{userData.name}</Text>
+            <Text style={styles.userDetails}>Age: {userData.age}</Text>
+            <Text style={styles.userDetails}>
+              University: {userData.university}
+            </Text>
+            <Text style={styles.userDetails}>Email: {userData.email}</Text>
+          </View>
+        )}
       </View>
+
+      <Text style={styles.sessionsHeader}>Your Sessions</Text>
+      {userSessions.length === 0 ? (
+        <Text style={styles.noSessions}>No sessions found.</Text>
+      ) : (
+        userSessions.map((session) => (
+          <View key={session.id} style={styles.sessionContainer}>
+            <Text style={styles.sessionText}>Date: {session.student.date}</Text>
+            <Text style={styles.sessionText}>Time: {session.student.time}</Text>
+            <Text style={styles.sessionText}>
+              Message: {session.student.message}
+            </Text>
+
+            {session.status === "pending" && (
+              <View style={styles.buttonsContainer}>
+                <TouchableOpacity
+                  style={styles.acceptButton}
+                  onPress={() => handleSessionAction(session.id, "accept")}
+                >
+                  <Text style={styles.buttonText}>Accept</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.rejectButton}
+                  onPress={() => handleSessionAction(session.id, "reject")}
+                >
+                  <Text style={styles.buttonText}>Reject</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        ))
+      )}
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-    padding: 10,
-  },
-  safeview: {
-    flex: 1,
-  },
   container: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+    padding: 20,
+  },
+  profileContainer: {
     alignItems: "center",
-    marginVertical: 20,
+    marginBottom: 20,
+  },
+  profileInfo: {
+    alignItems: "center",
+    marginBottom: 20,
   },
   profileImage: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    marginBottom: 15,
+    marginBottom: 10,
   },
-  infoText: {
-    fontSize: 16,
-    marginVertical: 5,
-  },
-  label: {
+  userName: {
+    fontSize: 24,
     fontWeight: "bold",
+    color: "#333",
+  },
+  userDetails: {
+    fontSize: 16,
+    color: "#888",
+    marginTop: 5,
+  },
+  sessionsHeader: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 10,
   },
   sessionContainer: {
-    marginTop: 30,
-  },
-  sessionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
+    backgroundColor: "#fff",
+    padding: 15,
     marginBottom: 15,
-  },
-  sessionBox: {
-    marginBottom: 15,
-    padding: 10,
-    borderWidth: 1,
+    borderRadius: 8,
     borderColor: "#ddd",
-    borderRadius: 5,
+    borderWidth: 1,
   },
   sessionText: {
     fontSize: 16,
+    color: "#333",
+    marginBottom: 5,
   },
-  buttonContainer: {
+  buttonsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 10,
   },
-  button: {
-    padding: 10,
-    width: "45%",
-    borderRadius: 5,
-  },
   acceptButton: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#28a745",
+    padding: 10,
+    borderRadius: 8,
   },
   rejectButton: {
-    backgroundColor: "#f44336",
+    backgroundColor: "#dc3545",
+    padding: 10,
+    borderRadius: 8,
   },
   buttonText: {
     color: "#fff",
-    textAlign: "center",
+    fontWeight: "bold",
   },
   loadingContainer: {
     flex: 1,
@@ -252,12 +221,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    fontSize: 16,
     marginTop: 10,
+    fontSize: 18,
   },
-  errorText: {
+  noSessions: {
     fontSize: 16,
-    color: "red",
+    color: "#888",
   },
 });
 
