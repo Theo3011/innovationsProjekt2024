@@ -9,7 +9,14 @@ import {
   Alert,
   ScrollView,
 } from "react-native";
-import { getDatabase, ref, get, onValue, update, remove } from "firebase/database";
+import {
+  getDatabase,
+  ref,
+  get,
+  onValue,
+  update,
+  remove,
+} from "firebase/database";
 import { getAuth } from "firebase/auth";
 
 const ProfilePage = () => {
@@ -17,9 +24,11 @@ const ProfilePage = () => {
   const [userSessions, setUserSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userType, setUserType] = useState(null); // "student" eller "tutor"
+  const [studentId, setStudentId] = useState(null); // Store studentId if needed
+  const [tutorId, setTutorId] = useState(null); // Store tutorId if needed
 
   const auth = getAuth();
-  const userId = auth.currentUser?.uid;
+  const userId = auth.currentUser?.uid; // Get current logged in userId
 
   useEffect(() => {
     if (userId) {
@@ -27,31 +36,33 @@ const ProfilePage = () => {
       const studentRef = ref(db, `students/${userId}`);
       const tutorRef = ref(db, `tutors/${userId}`);
 
-      // Tjek om brugeren er en student
+      // Check if user is a student
       get(studentRef)
         .then((snapshot) => {
           if (snapshot.exists()) {
             setUserType("student");
             setUserData(snapshot.val());
+            setStudentId(userId); // Store studentId
             fetchSessions("students", userId);
           } else {
-            // Hvis ikke en student, tjek om brugeren er en tutor
+            // If not a student, check if the user is a tutor
             get(tutorRef)
               .then((snapshot) => {
                 if (snapshot.exists()) {
                   setUserType("tutor");
                   setUserData(snapshot.val());
+                  setTutorId(userId); // Store tutorId
                   fetchSessions("tutors", userId);
                 } else {
-                  console.log("Bruger ikke fundet i students eller tutors.");
+                  console.log("User not found in students or tutors.");
                 }
               })
               .catch((error) =>
-                console.error("Fejl ved hentning af tutor-data:", error)
+                console.error("Error fetching tutor data:", error)
               );
           }
         })
-        .catch((error) => console.error("Fejl ved hentning af student-data:", error))
+        .catch((error) => console.error("Error fetching student data:", error))
         .finally(() => setLoading(false));
     }
   }, [userId]);
@@ -79,27 +90,42 @@ const ProfilePage = () => {
       const db = getDatabase();
 
       if (action === "accept") {
-        // Opdater status til "accepted" for både tutor og student
-        const tutorSessionRef = ref(db, `tutors/${userId}/sessions/${sessionId}`);
-        const studentSessionRef = ref(db, `students/${studentId}/sessions/${sessionId}`);
+        // Update session status to "accepted" for both tutor and student
+        const tutorSessionRef = ref(
+          db,
+          `tutors/${userId}/sessions/${sessionId}`
+        );
+        const studentSessionRef = ref(
+          db,
+          `students/${studentId}/sessions/${sessionId}`
+        );
         await update(tutorSessionRef, { status: "accepted" });
         await update(studentSessionRef, { status: "accepted" });
 
-        Alert.alert("Succes", "Du har accepteret sessionen!");
+        Alert.alert("Success", "You have accepted the session!");
       } else if (action === "reject") {
-        // Fjern sessionen fra tutorens data
-        const tutorSessionRef = ref(db, `tutors/${userId}/sessions/${sessionId}`);
+        // Remove session from tutor's data
+        const tutorSessionRef = ref(
+          db,
+          `tutors/${userId}/sessions/${sessionId}`
+        );
         await remove(tutorSessionRef);
 
-        // Opdater status til "rejected" for studenten
-        const studentSessionRef = ref(db, `students/${studentId}/sessions/${sessionId}`);
+        // Update status to "rejected" for student
+        const studentSessionRef = ref(
+          db,
+          `students/${studentId}/sessions/${sessionId}`
+        );
         await update(studentSessionRef, { status: "rejected" });
 
-        Alert.alert("Afvist", "Studenten er blevet informeret om afvisningen.");
+        Alert.alert(
+          "Rejected",
+          "The student has been informed of the rejection."
+        );
       }
     } catch (error) {
-      console.error("Fejl ved håndtering af session:", error);
-      Alert.alert("Fejl", "Noget gik galt. Prøv igen.");
+      console.error("Error handling session:", error);
+      Alert.alert("Error", "Something went wrong. Please try again.");
     }
   };
 
@@ -107,7 +133,7 @@ const ProfilePage = () => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007BFF" />
-        <Text style={styles.loadingText}>Indlæser profil...</Text>
+        <Text style={styles.loadingText}>Loading profile...</Text>
       </View>
     );
   }
@@ -115,7 +141,7 @@ const ProfilePage = () => {
   if (!userData) {
     return (
       <View style={styles.container}>
-        <Text style={styles.errorText}>Ingen brugerdata tilgængelig.</Text>
+        <Text style={styles.errorText}>No user data available.</Text>
       </View>
     );
   }
@@ -132,15 +158,15 @@ const ProfilePage = () => {
           />
 
           <Text style={styles.infoText}>
-            <Text style={styles.label}>Navn: </Text>
+            <Text style={styles.label}>Name: </Text>
             {userData.name || "N/A"}
           </Text>
           <Text style={styles.infoText}>
-            <Text style={styles.label}>Alder: </Text>
+            <Text style={styles.label}>Age: </Text>
             {userData.age || "N/A"}
           </Text>
           <Text style={styles.infoText}>
-            <Text style={styles.label}>Universitet: </Text>
+            <Text style={styles.label}>University: </Text>
             {userData.university || "N/A"}
           </Text>
           <Text style={styles.infoText}>
@@ -152,26 +178,28 @@ const ProfilePage = () => {
         <View style={styles.sessionContainer}>
           <Text style={styles.sessionTitle}>
             {userType === "tutor"
-              ? "Kommende Tutor-Sessions"
-              : "Kommende Sessions"}
+              ? "Upcoming Tutor Sessions"
+              : "Upcoming Sessions"}
           </Text>
           {userSessions.length > 0 ? (
             userSessions.map((session) => (
               <View key={session.id} style={styles.sessionBox}>
                 <Text style={styles.sessionText}>
                   <Text style={styles.label}>
-                    {userType === "tutor" ? "Student Message: " : "Tutor Name: "}
+                    {userType === "tutor"
+                      ? "Student Message: "
+                      : "Tutor Name: "}
                   </Text>
                   {userType === "tutor"
                     ? session.studentMessage
                     : session.tutorName}
                 </Text>
                 <Text style={styles.sessionText}>
-                  <Text style={styles.label}>Dato: </Text>
+                  <Text style={styles.label}>Date: </Text>
                   {session.date}
                 </Text>
                 <Text style={styles.sessionText}>
-                  <Text style={styles.label}>Tid: </Text>
+                  <Text style={styles.label}>Time: </Text>
                   {session.time}
                 </Text>
                 {userType === "tutor" && session.status === "pending" && (
@@ -179,25 +207,33 @@ const ProfilePage = () => {
                     <TouchableOpacity
                       style={[styles.button, styles.acceptButton]}
                       onPress={() =>
-                        handleSessionAction(session.id, session.studentId, "accept")
+                        handleSessionAction(
+                          session.id,
+                          session.studentId,
+                          "accept"
+                        )
                       }
                     >
-                      <Text style={styles.buttonText}>Accepter</Text>
+                      <Text style={styles.buttonText}>Accept</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[styles.button, styles.rejectButton]}
                       onPress={() =>
-                        handleSessionAction(session.id, session.studentId, "reject")
+                        handleSessionAction(
+                          session.id,
+                          session.studentId,
+                          "reject"
+                        )
                       }
                     >
-                      <Text style={styles.buttonText}>Afvis</Text>
+                      <Text style={styles.buttonText}>Reject</Text>
                     </TouchableOpacity>
                   </View>
                 )}
               </View>
             ))
           ) : (
-            <Text style={styles.sessionText}>Ingen kommende sessions</Text>
+            <Text style={styles.sessionText}>No upcoming sessions</Text>
           )}
         </View>
       </View>
