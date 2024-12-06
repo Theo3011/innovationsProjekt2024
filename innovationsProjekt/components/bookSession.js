@@ -82,6 +82,7 @@ const BookSession = () => {
         date: date.toISOString().split("T")[0],
         time: time.toISOString().split("T")[1].slice(0, 5),
         timestamp,
+        status: "pending", // Tilføj status som "pending"
       };
   
       await set(newTutorSessionRef, sessionData);
@@ -97,6 +98,7 @@ const BookSession = () => {
         date: date.toISOString().split("T")[0],
         time: time.toISOString().split("T")[1].slice(0, 5),
         timestamp,
+        status: "pending", // Tilføj status som "pending"
       };
   
       await set(newStudentSessionRef, studentSessionData);
