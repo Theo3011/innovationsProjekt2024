@@ -9,7 +9,7 @@ import {
   Alert,
   ScrollView,
 } from "react-native";
-import { getDatabase, ref, onValue, update } from "firebase/database";
+import { getDatabase, ref, onValue, update, remove } from "firebase/database"; // Importer 'remove'
 import { getAuth } from "firebase/auth";
 
 const ProfilePage = () => {
@@ -77,12 +77,9 @@ const ProfilePage = () => {
         });
         Alert.alert("Success", "Session accepted!");
       } else if (action === "reject") {
-        // Update status to "rejected" for both tutor and student
-        await update(sessionRef, {
-          "student/status": "rejected",
-          "tutor/status": "rejected",
-        });
-        Alert.alert("Rejected", "Session rejected.");
+        // Delete the session from Firebase
+        await remove(sessionRef);
+        Alert.alert("Rejected", "Session has been deleted.");
       }
     } catch (error) {
       console.error("Error handling session:", error);
