@@ -131,6 +131,7 @@ const Dashboard = () => {
                       type: offer.type,
                       description: offer.description,
                       receiverId: offer.createdBy,
+                      exam: offer.exam,
                     })
                   }
                 >

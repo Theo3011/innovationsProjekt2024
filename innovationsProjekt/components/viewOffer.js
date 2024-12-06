@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,15 +8,43 @@ import {
   Image,
   Alert,
 } from "react-native";
-import { getDatabase, ref, push, set } from "firebase/database";
+import { getDatabase, ref, get } from "firebase/database";
 import { useNavigation } from "@react-navigation/native";
 import { getAuth } from "firebase/auth";
 
 const ViewOffer = ({ route }) => {
-  const { name, exam, price, type, description, receiverId } = route.params; // Modtag receiverId korrekt
+  const {
+    name,
+    exam,
+    price,
+    type,
+    description,
+    receiverId,
+    imageUrl, // For the image URL
+    createdByUserId, // User ID who created the offer
+  } = route.params; // Modtag alle de nødvendige parametre
+
   const navigation = useNavigation();
   const auth = getAuth();
   const currentUserId = auth.currentUser?.uid; // Den aktuelle bruger
+  const [userRole, setUserRole] = useState(null);
+
+  // Fetch user role (student or tutor) and display dynamic header
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (createdByUserId) {
+        const db = getDatabase();
+        const userRef = ref(db, "users/" + createdByUserId); // Stien til brugerdata
+        const snapshot = await get(userRef);
+        if (snapshot.exists()) {
+          const userData = snapshot.val();
+          setUserRole(userData.role); // Antager at 'role' feltet er der
+        }
+      }
+    };
+
+    fetchUserRole();
+  }, [createdByUserId]);
 
   const handleStartChat = async () => {
     if (!currentUserId || !receiverId) {
@@ -53,19 +81,30 @@ const ViewOffer = ({ route }) => {
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.header}>Tutor opslag</Text>
+      {/* Dynamisk overskrift */}
+      <Text style={styles.header}>
+        {userRole === "tutor" ? "Tutor opslag" : "Studerendes opslag"}
+      </Text>
+
       <View style={styles.profileSection}>
-        <Image style={styles.profileImage} />
+        {/* Hvis der er et billede-URL, vis det */}
+        {imageUrl ? (
+          <Image source={{ uri: imageUrl }} style={styles.profileImage} />
+        ) : (
+          <View style={styles.placeholder}></View>
+        )}
         <View style={styles.details}>
-          <Text>Name: {name}</Text>
-          <Text>Eksamen: {exam}</Text>
+          <Text>Name: {name || "Ukendt bruger"}</Text>
+          <Text>Eksamen: {exam || "Ikke angivet"}</Text>
           <Text>Pris/time: {price} DKK</Text>
-          <Text>Undervisningstype: {type}</Text>
+          <Text>Undervisningstype: {type || "Ikke angivet"}</Text>
         </View>
       </View>
 
       <Text style={styles.subHeader}>Beskrivelse:</Text>
-      <Text style={styles.description}>{description}</Text>
+      <Text style={styles.description}>
+        {description || "Ingen beskrivelse"}
+      </Text>
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.button} onPress={handleStartChat}>
@@ -75,7 +114,7 @@ const ViewOffer = ({ route }) => {
           style={[styles.button, styles.secondaryButton]}
           onPress={() =>
             navigation.navigate("BookSession", {
-              tutorId: receiverId, // Send receiverId videre
+              tutorId: receiverId,
               tutorName: name,
             })
           }
@@ -150,9 +189,13 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: "#007BFF",
   },
+  placeholder: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "#ccc",
+    marginRight: 20,
+  },
 });
 
 export default ViewOffer;
-
-
-
