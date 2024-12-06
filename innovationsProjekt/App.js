@@ -14,7 +14,8 @@ import Settings from "./components/settings";
 import ProfilePage from "./components/profilePage";
 import OfferPage from "./components/offerPage";
 import PrivateChat from "./components/privateChat";
-import viewOffer from "./components/viewOffer"
+import viewOffer from "./components/viewOffer";
+import BookSession from "./components/bookSession";
 
 // Initialiser navigatører
 const Stack = createStackNavigator();
@@ -94,6 +95,11 @@ export default function App() {
           name="InfoToViewOffer"
           component={viewOffer}
           options={{ title: "Vis opslag" }}
+        />
+        <Stack.Screen
+          name="BookSession"
+          component={BookSession}
+          options={{ title: "Book Session" }}
         />
       </Stack.Navigator>
       <StatusBar style="auto" />
