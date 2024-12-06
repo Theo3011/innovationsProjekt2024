@@ -8,7 +8,7 @@ import {
   Image,
   Alert,
 } from "react-native";
-import { getDatabase, ref, get } from "firebase/database";
+import { getDatabase, ref, get, push, set } from "firebase/database"; // Import push function
 import { useNavigation } from "@react-navigation/native";
 import { getAuth } from "firebase/auth";
 
@@ -58,7 +58,7 @@ const ViewOffer = ({ route }) => {
       const chatsRef = ref(db, "chats");
 
       // Opret en ny chat mellem den aktuelle bruger og tutoren
-      const newChatRef = push(chatsRef);
+      const newChatRef = push(chatsRef); // Use push to create a new reference for the chat
       const chatId = newChatRef.key;
 
       const chatData = {
@@ -69,7 +69,7 @@ const ViewOffer = ({ route }) => {
       };
 
       // Gem chatdata i Firebase
-      await set(newChatRef, chatData);
+      await set(newChatRef, chatData); // Set chat data to the new chat reference
 
       // Naviger til PrivateChat og send chatId og tutorens navn
       navigation.navigate("PrivateChat", { chatId, tutorName: name });
