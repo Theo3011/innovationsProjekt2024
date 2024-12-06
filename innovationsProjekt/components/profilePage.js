@@ -104,9 +104,7 @@ const ProfilePage = () => {
             />
             <Text style={styles.userName}>{userData.name}</Text>
             <Text style={styles.userDetails}>Age: {userData.age}</Text>
-            <Text style={styles.userDetails}>
-              University: {userData.university}
-            </Text>
+            <Text style={styles.userDetails}>University: {userData.study}</Text>
             <Text style={styles.userDetails}>Email: {userData.email}</Text>
           </View>
         )}
