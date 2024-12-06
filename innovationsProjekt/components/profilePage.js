@@ -33,7 +33,6 @@ const ProfilePage = () => {
           if (snapshot.exists()) {
             setUserType("student");
             setUserData(snapshot.val());
-            fetchSessions("students", userId);
           } else {
             // Hvis ikke en student, tjek om brugeren er en tutor
             get(tutorRef)
@@ -41,64 +40,76 @@ const ProfilePage = () => {
                 if (snapshot.exists()) {
                   setUserType("tutor");
                   setUserData(snapshot.val());
-                  fetchSessions("tutors", userId);
                 } else {
-                  console.log("Bruger ikke fundet i students eller tutors.");
+                  console.log("User not found in students or tutors.");
                 }
               })
               .catch((error) =>
-                console.error("Fejl ved hentning af tutor-data:", error)
+                console.error("Error fetching tutor data:", error)
               );
           }
         })
-        .catch((error) => console.error("Fejl ved hentning af student-data:", error))
+        .catch((error) => console.error("Error fetching student data:", error))
         .finally(() => setLoading(false));
     }
   }, [userId]);
 
-  const fetchSessions = (userPath, id) => {
-    const db = getDatabase();
-    const sessionsRef = ref(db, `${userPath}/${id}/sessions`);
-
-    onValue(sessionsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const sessionsArray = Object.keys(data).map((key) => ({
-          id: key,
-          ...data[key],
-        }));
-        setUserSessions(sessionsArray);
-      } else {
-        setUserSessions([]);
-      }
-    });
-  };
-
-  const handleSessionAction = async (sessionId, studentId, action) => {
-    try {
+  // Fetch sessions baseret på brugertype
+  useEffect(() => {
+    if (userId && userType) {
       const db = getDatabase();
+      const sessionsRef = ref(
+        db,
+        userType === "tutor"
+          ? `tutors/${userId}/sessions`
+          : `students/${userId}/sessions`
+      );
 
+      const unsubscribe = onValue(sessionsRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const sessionsArray = Object.keys(data).map((key) => ({
+            id: key,
+            ...data[key],
+          }));
+          setUserSessions(sessionsArray);
+        } else {
+          setUserSessions([]);
+        }
+      });
+
+      return () => unsubscribe(); // Cleanup listener
+    }
+  }, [userId, userType]);
+
+  // Funktion til at håndtere accept/afvisning
+  const handleSessionAction = async (sessionId, action, session) => {
+    const db = getDatabase();
+    const studentId = session.studentId;
+    const tutorId = session.tutorId;
+
+    try {
       if (action === "accept") {
-        // Opdater status til "accepted" for både tutor og student
-        const tutorSessionRef = ref(db, `tutors/${userId}/sessions/${sessionId}`);
+        // Opdater status for både tutor og student
+        const tutorSessionRef = ref(db, `tutors/${tutorId}/sessions/${sessionId}`);
         const studentSessionRef = ref(db, `students/${studentId}/sessions/${sessionId}`);
+
         await update(tutorSessionRef, { status: "accepted" });
         await update(studentSessionRef, { status: "accepted" });
 
-        Alert.alert("Succes", "Du har accepteret sessionen!");
-      } else if (action === "reject") {
-        // Fjern sessionen fra tutorens data
-        const tutorSessionRef = ref(db, `tutors/${userId}/sessions/${sessionId}`);
-        await remove(tutorSessionRef);
-
-        // Opdater status til "rejected" for studenten
+        Alert.alert("Succes", "Session accepteret!");
+      } else if (action === "deny") {
+        // Fjern session fra både tutor og student
+        const tutorSessionRef = ref(db, `tutors/${tutorId}/sessions/${sessionId}`);
         const studentSessionRef = ref(db, `students/${studentId}/sessions/${sessionId}`);
-        await update(studentSessionRef, { status: "rejected" });
 
-        Alert.alert("Afvist", "Studenten er blevet informeret om afvisningen.");
+        await remove(tutorSessionRef);
+        await remove(studentSessionRef);
+
+        Alert.alert("Succes", "Session afvist!");
       }
     } catch (error) {
-      console.error("Fejl ved håndtering af session:", error);
+      console.error(error);
       Alert.alert("Fejl", "Noget gik galt. Prøv igen.");
     }
   };
@@ -107,7 +118,7 @@ const ProfilePage = () => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007BFF" />
-        <Text style={styles.loadingText}>Indlæser profil...</Text>
+        <Text style={styles.loadingText}>Loading Profile...</Text>
       </View>
     );
   }
@@ -115,102 +126,93 @@ const ProfilePage = () => {
   if (!userData) {
     return (
       <View style={styles.container}>
-        <Text style={styles.errorText}>Ingen brugerdata tilgængelig.</Text>
+        <Text style={styles.errorText}>No user data available.</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.scrollView}>
-      <View style={styles.safeview}>
-        <View style={styles.container}>
-          <Image
-            source={{
-              uri: userData.profileImage || "https://via.placeholder.com/100",
-            }}
-            style={styles.profileImage}
-          />
+    <ScrollView style={styles.safeview}>
+      <View style={styles.container}>
+        <Image
+          source={{
+            uri: userData.profileImage || "https://via.placeholder.com/100",
+          }}
+          style={styles.profileImage}
+        />
 
-          <Text style={styles.infoText}>
-            <Text style={styles.label}>Navn: </Text>
-            {userData.name || "N/A"}
-          </Text>
-          <Text style={styles.infoText}>
-            <Text style={styles.label}>Alder: </Text>
-            {userData.age || "N/A"}
-          </Text>
-          <Text style={styles.infoText}>
-            <Text style={styles.label}>Universitet: </Text>
-            {userData.university || "N/A"}
-          </Text>
-          <Text style={styles.infoText}>
-            <Text style={styles.label}>Email: </Text>
-            {userData.email || "N/A"}
-          </Text>
-        </View>
+        <Text style={styles.infoText}>
+          <Text style={styles.label}>Name: </Text>
+          {userData.name || "N/A"}
+        </Text>
+        <Text style={styles.infoText}>
+          <Text style={styles.label}>Age: </Text>
+          {userData.age || "N/A"}
+        </Text>
+        <Text style={styles.infoText}>
+          <Text style={styles.label}>University: </Text>
+          {userData.university || "N/A"}
+        </Text>
+        <Text style={styles.infoText}>
+          <Text style={styles.label}>Email: </Text>
+          {userData.email || "N/A"}
+        </Text>
+      </View>
 
-        <View style={styles.sessionContainer}>
-          <Text style={styles.sessionTitle}>
-            {userType === "tutor"
-              ? "Kommende Tutor-Sessions"
-              : "Kommende Sessions"}
-          </Text>
-          {userSessions.length > 0 ? (
-            userSessions.map((session) => (
-              <View key={session.id} style={styles.sessionBox}>
-                <Text style={styles.sessionText}>
-                  <Text style={styles.label}>
-                    {userType === "tutor" ? "Student Message: " : "Tutor Name: "}
-                  </Text>
-                  {userType === "tutor"
-                    ? session.studentMessage
-                    : session.tutorName}
+      <View style={styles.sessionContainer}>
+        <Text style={styles.sessionTitle}>
+          {userType === "tutor"
+            ? "Kommende Tutor-Sessions"
+            : "Kommende Sessions"}
+        </Text>
+        {userSessions.length > 0 ? (
+          userSessions.map((session) => (
+            <View key={session.id} style={styles.sessionBox}>
+              <Text style={styles.sessionText}>
+                <Text style={styles.label}>
+                  {userType === "tutor" ? "Student Message: " : "Tutor Name: "}
                 </Text>
-                <Text style={styles.sessionText}>
-                  <Text style={styles.label}>Dato: </Text>
-                  {session.date}
-                </Text>
-                <Text style={styles.sessionText}>
-                  <Text style={styles.label}>Tid: </Text>
-                  {session.time}
-                </Text>
-                {userType === "tutor" && session.status === "pending" && (
-                  <View style={styles.buttonContainer}>
-                    <TouchableOpacity
-                      style={[styles.button, styles.acceptButton]}
-                      onPress={() =>
-                        handleSessionAction(session.id, session.studentId, "accept")
-                      }
-                    >
-                      <Text style={styles.buttonText}>Accepter</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.button, styles.rejectButton]}
-                      onPress={() =>
-                        handleSessionAction(session.id, session.studentId, "reject")
-                      }
-                    >
-                      <Text style={styles.buttonText}>Afvis</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </View>
-            ))
-          ) : (
-            <Text style={styles.sessionText}>Ingen kommende sessions</Text>
-          )}
-        </View>
+                {userType === "tutor" ? session.studentMessage : session.tutorName}
+              </Text>
+              <Text style={styles.sessionText}>
+                <Text style={styles.label}>Date: </Text>
+                {session.date}
+              </Text>
+              <Text style={styles.sessionText}>
+                <Text style={styles.label}>Time: </Text>
+                {session.time}
+              </Text>
+              {userType === "tutor" && session.status === "pending" && (
+                <View style={styles.actionButtons}>
+                  <TouchableOpacity
+                    style={[styles.button, styles.acceptButton]}
+                    onPress={() => handleSessionAction(session.id, "accept", session)}
+                  >
+                    <Text style={styles.buttonText}>Accepter</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.button, styles.denyButton]}
+                    onPress={() => handleSessionAction(session.id, "deny", session)}
+                  >
+                    <Text style={styles.buttonText}>Afvis</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          ))
+        ) : (
+          <Text style={styles.sessionText}>Ingen kommende sessions</Text>
+        )}
       </View>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  scrollView: {
+  safeview: {
     flex: 1,
     backgroundColor: "#f5f5f5",
   },
-  safeview: { flex: 1, backgroundColor: "#f5f5f5" },
   container: {
     justifyContent: "center",
     alignItems: "center",
@@ -227,12 +229,28 @@ const styles = StyleSheet.create({
     borderColor: "#007BFF",
     marginBottom: 20,
   },
+  infoText: {
+    fontSize: 16,
+    color: "#555",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  label: {
+    fontWeight: "bold",
+    color: "#333",
+  },
   sessionContainer: {
     backgroundColor: "#ffffff",
     padding: 20,
     margin: 20,
     borderRadius: 10,
     elevation: 3,
+  },
+  sessionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 10,
   },
   sessionBox: {
     padding: 10,
@@ -245,34 +263,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#555",
   },
-  buttonContainer: {
+  actionButtons: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "space-around",
     marginTop: 10,
   },
-  acceptButton: {
-    backgroundColor: "#4CAF50",
+  button: {
     padding: 10,
-    borderRadius: 5,
-    flex: 1,
-    marginRight: 5,
+    borderRadius: 8,
+    alignItems: "center",
+    width: "45%",
   },
-  rejectButton: {
-    backgroundColor: "#F44336",
-    padding: 10,
-    borderRadius: 5,
-    flex: 1,
-    marginLeft: 5,
+  acceptButton: {
+    backgroundColor: "#28a745",
+  },
+  denyButton: {
+    backgroundColor: "#dc3545",
   },
   buttonText: {
     color: "#fff",
-    textAlign: "center",
-  },
-  sessionTitle: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: "bold",
-    color: "#333",
-    marginBottom: 10,
   },
 });
 
