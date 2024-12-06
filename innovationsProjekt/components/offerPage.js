@@ -19,9 +19,19 @@ import { ref, push } from "firebase/database"; // For at gemme data i databasen
 const OfferPage = () => {
   const [university, setUniversity] = useState(""); // Valgte universitet
   const [studyLine, setStudyLine] = useState(""); // Valgte studielinje
+  const [exam, setExam] = useState(""); // Valgte eksamen
   const [price, setPrice] = useState(""); // Valgte pris
   const [description, setDescription] = useState(""); // Beskrivelse
   const [selectedType, setSelectedType] = useState(null); // Undervisningstype (gruppe/individuel)
+
+  // Prisdata (eksempel på mulige prisintervaller eller fastlagte priser)
+  const priceData = [
+    { label: "150 kr/time", value: "150" },
+    { label: "200 kr/time", value: "200" },
+    { label: "250 kr/time", value: "250" },
+    { label: "300 kr/time", value: "300" },
+    { label: "350 kr/time", value: "350" },
+  ];
 
   // Universitetsdata
   const universityData = [
@@ -74,23 +84,96 @@ const OfferPage = () => {
     ],
   };
 
-  // Priser
-  const priceData = [
-    { label: "150 kr/t", value: "150" },
-    { label: "200 kr/t", value: "200" },
-    { label: "250 kr/t", value: "250" },
-    { label: "300 kr/t", value: "300" },
-    { label: "350 kr/t", value: "350" },
-  ];
-
-  // Håndter valg af undervisningstype
-  const handleSelection = (type) => {
-    setSelectedType(type);
+  // Eksamensdata til hver studielinje
+  const examData = {
+    math: [
+      { label: "Matematik 1", value: "math1" },
+      { label: "Matematik 2", value: "math2" },
+    ],
+    cs: [
+      { label: "Programmering", value: "programming" },
+      { label: "Algoritmer", value: "algorithms" },
+    ],
+    economics: [
+      { label: "Mikroøkonomi", value: "microeconomics" },
+      { label: "Makroøkonomi", value: "macroeconomics" },
+    ],
+    law: [
+      { label: "Familieret", value: "familyLaw" },
+      { label: "Strafferet", value: "criminalLaw" },
+    ],
+    medicine: [
+      { label: "Anatomi", value: "anatomy" },
+      { label: "Fysiologi", value: "physiology" },
+    ],
+    biology: [
+      { label: "Genetik", value: "genetics" },
+      { label: "Molekylærbiologi", value: "molecularBiology" },
+    ],
+    business: [
+      { label: "Regnskab", value: "accounting" },
+      { label: "Marketing", value: "marketing" },
+    ],
+    engineering: [
+      { label: "Mekanik", value: "mechanics" },
+      { label: "Elektronik", value: "electronics" },
+    ],
+    eit: [
+      { label: "Netværk", value: "networks" },
+      { label: "Kredsløb", value: "circuits" },
+    ],
+    architecture: [
+      { label: "Bygningsdesign", value: "buildingDesign" },
+      { label: "Urbanisering", value: "urbanization" },
+    ],
+    social: [
+      { label: "Politologi", value: "politics" },
+      { label: "Sociologi", value: "sociology" },
+    ],
+    humanities: [
+      { label: "Litteratur", value: "literature" },
+      { label: "Filosofi", value: "philosophy" },
+    ],
+    civilEng: [
+      { label: "Brobygning", value: "bridgeBuilding" },
+      { label: "Vejteknik", value: "roadEngineering" },
+    ],
+    mechEng: [
+      { label: "Termodynamik", value: "thermodynamics" },
+      { label: "Maskindesign", value: "machineDesign" },
+    ],
+    software: [
+      { label: "App-udvikling", value: "appDevelopment" },
+      { label: "Softwaretest", value: "softwareTesting" },
+    ],
+    digitalMedia: [
+      { label: "Brugeroplevelse", value: "uxDesign" },
+      { label: "Interaktionsdesign", value: "interactionDesign" },
+    ],
+    intBusiness: [
+      { label: "International Handel", value: "intTrade" },
+      { label: "Forretningsstrategi", value: "businessStrategy" },
+    ],
+    finance: [
+      { label: "Investering", value: "investments" },
+      { label: "Økonomistyring", value: "financialManagement" },
+    ],
+    HaIt: [
+      { label: "Informationssystemer", value: "informationSystems" },
+      { label: "Databaser", value: "databases" },
+    ],
   };
 
   // Gem opslag i Firebase
   const saveOfferToDatabase = async () => {
-    if (!selectedType || !university || !studyLine || !price || !description) {
+    if (
+      !selectedType ||
+      !university ||
+      !studyLine ||
+      !exam ||
+      !price ||
+      !description
+    ) {
       Alert.alert("Fejl", "Udfyld venligst alle felterne!");
       return;
     }
@@ -111,6 +194,7 @@ const OfferPage = () => {
         type: selectedType,
         university,
         studyLine,
+        exam,
         price,
         description,
         createdBy: userId,
@@ -126,6 +210,7 @@ const OfferPage = () => {
       setSelectedType(null);
       setUniversity("");
       setStudyLine("");
+      setExam("");
       setPrice("");
       setDescription("");
     } catch (error) {
@@ -151,7 +236,7 @@ const OfferPage = () => {
                   styles.headerButton,
                   selectedType === "gruppe" && styles.selectedButton,
                 ]}
-                onPress={() => handleSelection("gruppe")}
+                onPress={() => setSelectedType("gruppe")}
               >
                 <Text
                   style={[
@@ -167,7 +252,7 @@ const OfferPage = () => {
                   styles.headerButton,
                   selectedType === "individuel" && styles.selectedButton,
                 ]}
-                onPress={() => handleSelection("individuel")}
+                onPress={() => setSelectedType("individuel")}
               >
                 <Text
                   style={[
@@ -192,8 +277,9 @@ const OfferPage = () => {
                 valueField="value"
                 value={university}
                 onChange={(item) => {
-                  setUniversity(item.value); // Opdater universitet
-                  setStudyLine(""); // Nulstil studielinje
+                  setUniversity(item.value);
+                  setStudyLine("");
+                  setExam("");
                 }}
                 renderLeftIcon={() => (
                   <AntDesign
@@ -214,11 +300,39 @@ const OfferPage = () => {
                   style={styles.dropdown}
                   placeholderStyle={styles.placeholderStyle}
                   selectedTextStyle={styles.selectedTextStyle}
-                  data={studyLineData[university] || []} // Dynamisk data
+                  data={studyLineData[university] || []}
                   labelField="label"
                   valueField="value"
                   value={studyLine}
-                  onChange={(item) => setStudyLine(item.value)}
+                  onChange={(item) => {
+                    setStudyLine(item.value);
+                    setExam("");
+                  }}
+                  renderLeftIcon={() => (
+                    <AntDesign
+                      style={styles.icon}
+                      color="black"
+                      name="Safety"
+                      size={20}
+                    />
+                  )}
+                />
+              </View>
+            )}
+
+            {/* Eksamen dropdown */}
+            {studyLine && (
+              <View style={styles.pickerContainer}>
+                <Text style={styles.pickerLabel}>Vælg Eksamen</Text>
+                <Dropdown
+                  style={styles.dropdown}
+                  placeholderStyle={styles.placeholderStyle}
+                  selectedTextStyle={styles.selectedTextStyle}
+                  data={examData[studyLine] || []}
+                  labelField="label"
+                  valueField="value"
+                  value={exam}
+                  onChange={(item) => setExam(item.value)}
                   renderLeftIcon={() => (
                     <AntDesign
                       style={styles.icon}

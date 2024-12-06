@@ -116,6 +116,7 @@ const Dashboard = () => {
                 <Text>Navn: {user.name || "Henter navn..."}</Text>
                 <Text>Studielinje: {offer.studyLine}</Text>
                 <Text>Universitet: {offer.university}</Text>
+                <Text>Eksamen: {offer.exam}</Text>
                 <Text>Pris/time: {offer.price} DKK</Text>
                 <Text>Undervisningstype: {offer.type}</Text>
                 <TouchableOpacity
