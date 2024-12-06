@@ -15,34 +15,49 @@ const ProfilePage = () => {
   const [userData, setUserData] = useState(null);
   const [userSessions, setUserSessions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userType, setUserType] = useState(null); // "student" eller "tutor"
 
   const auth = getAuth();
   const userId = auth.currentUser?.uid;
 
-  // Fetch user data
   useEffect(() => {
     if (userId) {
       const db = getDatabase();
-      const userRef = ref(db, `students/${userId}`); // Adjust path based on your database structure
+      const studentRef = ref(db, `students/${userId}`);
+      const tutorRef = ref(db, `tutors/${userId}`);
 
-      get(userRef)
+      // Tjek om brugeren er en student
+      get(studentRef)
         .then((snapshot) => {
           if (snapshot.exists()) {
+            setUserType("student");
             setUserData(snapshot.val());
           } else {
-            console.log("User data not found!");
+            // Hvis ikke en student, tjek om brugeren er en tutor
+            get(tutorRef)
+              .then((snapshot) => {
+                if (snapshot.exists()) {
+                  setUserType("tutor");
+                  setUserData(snapshot.val());
+                } else {
+                  console.log("User not found in students or tutors.");
+                }
+              })
+              .catch((error) =>
+                console.error("Error fetching tutor data:", error)
+              );
           }
         })
-        .catch((error) => console.error("Error fetching user data:", error))
+        .catch((error) => console.error("Error fetching student data:", error))
         .finally(() => setLoading(false));
     }
   }, [userId]);
 
-  // Fetch sessions
+  // Fetch sessions hvis brugeren er en tutor
   useEffect(() => {
-    if (userId) {
+    if (userId && userType === "tutor") {
       const db = getDatabase();
-      const sessionsRef = ref(db, `tutors/${userId}/sessions`); // Adjust path based on your database structure
+      const sessionsRef = ref(db, `tutors/${userId}/sessions`);
 
       const unsubscribe = onValue(sessionsRef, (snapshot) => {
         const data = snapshot.val();
@@ -59,7 +74,7 @@ const ProfilePage = () => {
 
       return () => unsubscribe(); // Cleanup listener
     }
-  }, [userId]);
+  }, [userId, userType]);
 
   if (loading) {
     return (
@@ -133,29 +148,31 @@ const ProfilePage = () => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.sessionContainer}>
-        <Text style={styles.sessionTitle}>Kommende Tutor-Sessions</Text>
-        {userSessions.length > 0 ? (
-          userSessions.map((session) => (
-            <View key={session.id} style={styles.sessionBox}>
-              <Text style={styles.sessionText}>
-                <Text style={styles.label}>Student Message: </Text>
-                {session.studentMessage}
-              </Text>
-              <Text style={styles.sessionText}>
-                <Text style={styles.label}>Date: </Text>
-                {session.date}
-              </Text>
-              <Text style={styles.sessionText}>
-                <Text style={styles.label}>Time: </Text>
-                {session.time}
-              </Text>
-            </View>
-          ))
-        ) : (
-          <Text style={styles.sessionText}>Ingen kommende sessions</Text>
-        )}
-      </View>
+      {userType === "tutor" && (
+        <View style={styles.sessionContainer}>
+          <Text style={styles.sessionTitle}>Kommende Tutor-Sessions</Text>
+          {userSessions.length > 0 ? (
+            userSessions.map((session) => (
+              <View key={session.id} style={styles.sessionBox}>
+                <Text style={styles.sessionText}>
+                  <Text style={styles.label}>Student Message: </Text>
+                  {session.studentMessage}
+                </Text>
+                <Text style={styles.sessionText}>
+                  <Text style={styles.label}>Date: </Text>
+                  {session.date}
+                </Text>
+                <Text style={styles.sessionText}>
+                  <Text style={styles.label}>Time: </Text>
+                  {session.time}
+                </Text>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.sessionText}>Ingen kommende sessions</Text>
+          )}
+        </View>
+      )}
     </View>
   );
 };
