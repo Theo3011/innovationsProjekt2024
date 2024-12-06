@@ -19,7 +19,7 @@ const ProfilePage = () => {
   const [userType, setUserType] = useState(null); // "student" or "tutor"
 
   const auth = getAuth();
-  const userId = auth.currentUser?.uid; // Get current logged in userId
+  const userId = auth.currentUser?.uid;
 
   useEffect(() => {
     if (userId) {
@@ -70,13 +70,19 @@ const ProfilePage = () => {
       const sessionRef = ref(db, `sessions/${sessionId}`);
 
       if (action === "accept") {
-        // Update session status to "accepted"
-        await update(sessionRef, { status: "accepted" });
-        Alert.alert("Success", "You have accepted the session!");
+        // Update status to "accepted" for both tutor and student
+        await update(sessionRef, {
+          "student/status": "accepted",
+          "tutor/status": "accepted",
+        });
+        Alert.alert("Success", "Session accepted!");
       } else if (action === "reject") {
-        // Update session status to "rejected"
-        await update(sessionRef, { status: "rejected" });
-        Alert.alert("Rejected", "The session has been rejected.");
+        // Update status to "rejected" for both tutor and student
+        await update(sessionRef, {
+          "student/status": "rejected",
+          "tutor/status": "rejected",
+        });
+        Alert.alert("Rejected", "Session rejected.");
       }
     } catch (error) {
       console.error("Error handling session:", error);
@@ -122,7 +128,7 @@ const ProfilePage = () => {
               Message: {session.student.message}
             </Text>
 
-            {session.status === "pending" && (
+            {session.student.status === "pending" && userType === "tutor" && (
               <View style={styles.buttonsContainer}>
                 <TouchableOpacity
                   style={styles.acceptButton}
