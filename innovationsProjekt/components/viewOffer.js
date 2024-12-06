@@ -13,20 +13,15 @@ import { useNavigation } from "@react-navigation/native";
 import { getAuth } from "firebase/auth";
 
 const ViewOffer = ({ route }) => {
-  const { name, exam, price, type, description, receiverIdq } = route.params; // Tilføj receiverIdq
+  const { name, exam, price, type, description, receiverId } = route.params; // Modtag receiverId korrekt
   const navigation = useNavigation();
   const auth = getAuth();
   const currentUserId = auth.currentUser?.uid; // Den aktuelle bruger
 
   const handleStartChat = async () => {
-    if (!currentUserId || !receiverIdq) {
+    if (!currentUserId || !receiverId) {
       Alert.alert("Fejl", "Kunne ikke finde brugeren eller tutorens ID.");
-      console.error(
-        "currentUserId:",
-        currentUserId,
-        "receiverIdq:",
-        receiverIdq
-      ); // Debug-log
+      console.error("currentUserId:", currentUserId, "receiverId:", receiverId);
       return;
     }
 
@@ -39,7 +34,7 @@ const ViewOffer = ({ route }) => {
       const chatId = newChatRef.key;
 
       const chatData = {
-        participants: [currentUserId, receiverIdq],
+        participants: [currentUserId, receiverId],
         messages: [],
         lastMessage: "",
         timestamp: Date.now(),
@@ -80,7 +75,7 @@ const ViewOffer = ({ route }) => {
           style={[styles.button, styles.secondaryButton]}
           onPress={() =>
             navigation.navigate("BookSession", {
-              tutorId: receiverIdq,
+              tutorId: receiverId, // Send receiverId videre
               tutorName: name,
             })
           }

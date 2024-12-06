@@ -17,21 +17,22 @@ const ProfilePage = () => {
 
   const userId = firebaseAuth.currentUser?.uid;
 
+  // I useEffect til at hente tutorens sessions
   useEffect(() => {
     if (userId) {
       const db = getDatabase();
-      const userRef = ref(db, `students/${userId}`); // Skift til `tutors/${userId}`, hvis nødvendigt
+      const sessionsRef = ref(db, `tutors/${userId}/sessions`);
 
-      get(userRef)
-        .then((snapshot) => {
-          if (snapshot.exists()) {
-            setUserData(snapshot.val());
-          } else {
-            console.log("User data not found!");
-          }
-        })
-        .catch((error) => console.error("Error fetching user data:", error))
-        .finally(() => setLoading(false));
+      onValue(sessionsRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const sessionsArray = Object.keys(data).map((key) => ({
+            id: key,
+            ...data[key],
+          }));
+          setUserSessions(sessionsArray);
+        }
+      });
     }
   }, [userId]);
 
@@ -101,24 +102,15 @@ const ProfilePage = () => {
         </Text>
 
         {/* Knapper */}
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleEditDetails}
-        >
+        <TouchableOpacity style={styles.button} onPress={handleEditDetails}>
           <Text style={styles.buttonText}>Ændre oplysninger</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleForgotPassword}
-        >
+        <TouchableOpacity style={styles.button} onPress={handleForgotPassword}>
           <Text style={styles.buttonText}>Glemt kodeord?</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handlePrintReviews}
-        >
+        <TouchableOpacity style={styles.button} onPress={handlePrintReviews}>
           <Text style={styles.buttonText}>Print anmeldelser</Text>
         </TouchableOpacity>
       </View>
@@ -126,35 +118,34 @@ const ProfilePage = () => {
       {/* Kommende Tutor-Sessions */}
       <View style={styles.sessionContainer}>
         <Text style={styles.sessionTitle}>Kommende Tutor-Sessions</Text>
-        <View style={styles.sessionBox}>
-          <Image
-            source={{ uri: userData.profileImage || "https://via.placeholder.com/50" }}
-            style={styles.sessionImage}
-          />
-          <View style={styles.sessionDetails}>
-            <Text style={styles.sessionText}>
-              <Text style={styles.label}>Navn: </Text>
-              {userData.name || "N/A"}
-            </Text>
-            <Text style={styles.sessionText}>
-              <Text style={styles.label}>Fag: </Text>
-              {userData.studyDirection || "N/A"}
-            </Text>
-            <Text style={styles.sessionText}>
-              <Text style={styles.label}>Lokation: </Text>
-              Online
-            </Text>
-          </View>
-          <Text style={styles.sessionDate}>Dato</Text>
-        </View>
+        {userSessions.length > 0 ? (
+          userSessions.map((session) => (
+            <View key={session.id} style={styles.sessionBox}>
+              <Text style={styles.sessionText}>
+                <Text style={styles.label}>Student Message: </Text>
+                {session.studentMessage}
+              </Text>
+              <Text style={styles.sessionText}>
+                <Text style={styles.label}>Date: </Text>
+                {session.date}
+              </Text>
+              <Text style={styles.sessionText}>
+                <Text style={styles.label}>Time: </Text>
+                {session.time}
+              </Text>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.sessionText}>Ingen kommende sessions</Text>
+        )}
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeview: { 
-    flex: 1, 
+  safeview: {
+    flex: 1,
     backgroundColor: "#f5f5f5",
   },
   container: {
