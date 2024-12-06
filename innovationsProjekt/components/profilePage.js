@@ -53,11 +53,16 @@ const ProfilePage = () => {
     }
   }, [userId]);
 
-  // Fetch sessions hvis brugeren er en tutor
+  // Fetch sessions baseret på brugertype
   useEffect(() => {
-    if (userId && userType === "tutor") {
+    if (userId && userType) {
       const db = getDatabase();
-      const sessionsRef = ref(db, `tutors/${userId}/sessions`);
+      const sessionsRef = ref(
+        db,
+        userType === "tutor"
+          ? `tutors/${userId}/sessions`
+          : `students/${userId}/sessions`
+      );
 
       const unsubscribe = onValue(sessionsRef, (snapshot) => {
         const data = snapshot.val();
@@ -148,31 +153,35 @@ const ProfilePage = () => {
         </TouchableOpacity>
       </View>
 
-      {userType === "tutor" && (
-        <View style={styles.sessionContainer}>
-          <Text style={styles.sessionTitle}>Kommende Tutor-Sessions</Text>
-          {userSessions.length > 0 ? (
-            userSessions.map((session) => (
-              <View key={session.id} style={styles.sessionBox}>
-                <Text style={styles.sessionText}>
-                  <Text style={styles.label}>Student Message: </Text>
-                  {session.studentMessage}
+      <View style={styles.sessionContainer}>
+        <Text style={styles.sessionTitle}>
+          {userType === "tutor"
+            ? "Kommende Tutor-Sessions"
+            : "Kommende Sessions"}
+        </Text>
+        {userSessions.length > 0 ? (
+          userSessions.map((session) => (
+            <View key={session.id} style={styles.sessionBox}>
+              <Text style={styles.sessionText}>
+                <Text style={styles.label}>
+                  {userType === "tutor" ? "Student Message: " : "Tutor Name: "}
                 </Text>
-                <Text style={styles.sessionText}>
-                  <Text style={styles.label}>Date: </Text>
-                  {session.date}
-                </Text>
-                <Text style={styles.sessionText}>
-                  <Text style={styles.label}>Time: </Text>
-                  {session.time}
-                </Text>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.sessionText}>Ingen kommende sessions</Text>
-          )}
-        </View>
-      )}
+                {userType === "tutor" ? session.studentMessage : session.tutorName}
+              </Text>
+              <Text style={styles.sessionText}>
+                <Text style={styles.label}>Date: </Text>
+                {session.date}
+              </Text>
+              <Text style={styles.sessionText}>
+                <Text style={styles.label}>Time: </Text>
+                {session.time}
+              </Text>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.sessionText}>Ingen kommende sessions</Text>
+        )}
+      </View>
     </View>
   );
 };
@@ -209,7 +218,7 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   button: {
-    backgroundColor: "#28A745",
+    backgroundColor: "#007BFF",
     padding: 15,
     borderRadius: 8,
     width: "90%",

@@ -41,22 +41,22 @@ const BookSession = () => {
       Alert.alert("Fejl", "Beskeden må ikke være tom.");
       return;
     }
-
+  
     if (!tutorId) {
       Alert.alert("Fejl", "Tutor ID mangler.");
       console.error("Tutor ID is undefined.");
       return;
     }
-
+  
     try {
       const db = getDatabase();
       const timestamp = Date.now();
-
+  
       // Chat data
       const chatsRef = ref(db, "chats");
       const newChatRef = push(chatsRef);
       const chatId = newChatRef.key;
-
+  
       const chatData = {
         participants: [currentUserId, tutorId],
         messages: [
@@ -69,13 +69,13 @@ const BookSession = () => {
         lastMessage: message,
         timestamp,
       };
-
+  
       await set(newChatRef, chatData);
-
+  
       // Tutor sessions data
       const tutorSessionsRef = ref(db, `tutors/${tutorId}/sessions`);
-      const newSessionRef = push(tutorSessionsRef);
-
+      const newTutorSessionRef = push(tutorSessionsRef);
+  
       const sessionData = {
         studentId: currentUserId,
         studentMessage: message,
@@ -83,15 +83,32 @@ const BookSession = () => {
         time: time.toISOString().split("T")[1].slice(0, 5),
         timestamp,
       };
-
-      await set(newSessionRef, sessionData);
-
+  
+      await set(newTutorSessionRef, sessionData);
+  
+      // Student sessions data
+      const studentSessionsRef = ref(db, `students/${currentUserId}/sessions`);
+      const newStudentSessionRef = push(studentSessionsRef);
+  
+      const studentSessionData = {
+        tutorId: tutorId,
+        tutorName: tutorName,
+        studentMessage: message,
+        date: date.toISOString().split("T")[0],
+        time: time.toISOString().split("T")[1].slice(0, 5),
+        timestamp,
+      };
+  
+      await set(newStudentSessionRef, studentSessionData);
+  
       Alert.alert("Succes", "Anmodning sendt!");
     } catch (error) {
       console.error(error);
       Alert.alert("Fejl", "Noget gik galt. Prøv igen.");
     }
   };
+  
+  
 
   return (
     <View style={styles.container}>
