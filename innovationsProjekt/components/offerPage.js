@@ -80,7 +80,7 @@ const OfferPage = () => {
     cbs: [
       { label: "International Business", value: "intBusiness" },
       { label: "Finansiering", value: "finance" },
-      { label: "Ha It.", value: "Ha It." },
+      { label: "Ha It.", value: "HaIt" },
     ],
   };
 
