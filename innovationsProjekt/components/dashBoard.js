@@ -5,13 +5,14 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Image,
 } from "react-native";
 import { getDatabase, ref, onValue } from "firebase/database";
 import { useNavigation } from "@react-navigation/native";
 
 const Dashboard = () => {
   const [offers, setOffers] = useState([]); // State to hold offer data
-  const [names, setNames] = useState({}); // State to hold student or tutor names
+  const [userDetails, setUserDetails] = useState({}); // State to hold user names and images
   const navigation = useNavigation();
 
   // Fetch offers from Firebase
@@ -33,13 +34,13 @@ const Dashboard = () => {
     return () => unsubscribeOffers(); // Cleanup after listener
   }, []);
 
-  // Fetch names (students or tutors) based on user ID (createdBy)
+  // Fetch user details (names and images) based on user ID (createdBy)
   useEffect(() => {
     const db = getDatabase();
 
-    const fetchName = async (id) => {
-      const studentRef = ref(db, `students/${id}/name`);
-      const tutorRef = ref(db, `tutors/${id}/name`);
+    const fetchUserDetails = async (id) => {
+      const studentRef = ref(db, `students/${id}`);
+      const tutorRef = ref(db, `tutors/${id}`);
 
       return new Promise((resolve) => {
         // First check if the ID exists in "students"
@@ -47,16 +48,19 @@ const Dashboard = () => {
           studentRef,
           (snapshot) => {
             if (snapshot.exists()) {
-              resolve(snapshot.val());
+              resolve(snapshot.val()); // Return student details
             } else {
               // If not found in "students", check in "tutors"
               onValue(
                 tutorRef,
                 (snapshot) => {
                   if (snapshot.exists()) {
-                    resolve(snapshot.val());
+                    resolve(snapshot.val()); // Return tutor details
                   } else {
-                    resolve("Ukendt bruger"); // Default fallback
+                    resolve({
+                      name: "Ukendt bruger",
+                      profileImage: null,
+                    }); // Default fallback
                   }
                 },
                 { onlyOnce: true }
@@ -68,59 +72,73 @@ const Dashboard = () => {
       });
     };
 
-    const fetchAllNames = async () => {
-      const namePromises = offers.map((offer) =>
-        fetchName(offer.createdBy).then((name) => ({
+    const fetchAllUserDetails = async () => {
+      const userPromises = offers.map((offer) =>
+        fetchUserDetails(offer.createdBy).then((details) => ({
           id: offer.createdBy,
-          name,
+          details,
         }))
       );
 
-      const results = await Promise.all(namePromises);
-      const namesMap = results.reduce(
-        (acc, { id, name }) => ({ ...acc, [id]: name }),
+      const results = await Promise.all(userPromises);
+      const userDetailsMap = results.reduce(
+        (acc, { id, details }) => ({ ...acc, [id]: details }),
         {}
       );
-      setNames(namesMap);
+      setUserDetails(userDetailsMap);
     };
 
     if (offers.length > 0) {
-      fetchAllNames();
+      fetchAllUserDetails();
     }
   }, [offers]); // Re-run if offers change
 
   return (
     <View style={styles.container}>
       <ScrollView style={styles.list}>
-        {offers.map((offer) => (
-          <View key={offer.id} style={styles.card}>
-            <View style={styles.profileImage}></View>
-            <View style={styles.cardContent}>
-              {/* Display the name based on createdBy */}
-              <Text>Navn: {names[offer.createdBy] || "Henter navn..."}</Text>
-              <Text>Studielinje: {offer.studyLine}</Text>
-              <Text>Universitet: {offer.university}</Text>
-              <Text>Pris/time: {offer.price} DKK</Text>
-              <Text>Undervisningstype: {offer.type}</Text>
-              <TouchableOpacity
-                style={styles.button}
-                onPress={() =>
-                  navigation.navigate("InfoToViewOffer", {
-                    name: names[offer.createdBy] || "Ukendt bruger",
-                    studyLine: offer.studyLine,
-                    university: offer.university,
-                    price: offer.price,
-                    type: offer.type,
-                    description: offer.description,
-                    receiverId: offer.createdBy,
-                  })
-                }
-              >
-                <Text style={styles.buttonText}>Vis opslag</Text>
-              </TouchableOpacity>
+        {offers.map((offer) => {
+          const user = userDetails[offer.createdBy] || {}; // Fetch user details
+          return (
+            <View key={offer.id} style={styles.card}>
+              {/* Display profile image */}
+              <View style={styles.profileImage}>
+                {user.profileImage ? (
+                  <Image
+                    source={{ uri: user.profileImage }}
+                    style={styles.imageStyle}
+                  />
+                ) : (
+                  <View style={styles.placeholder}></View>
+                )}
+              </View>
+              <View style={styles.cardContent}>
+                {/* Display the name */}
+                <Text>Navn: {user.name || "Henter navn..."}</Text>
+                <Text>Studielinje: {offer.studyLine}</Text>
+                <Text>Universitet: {offer.university}</Text>
+                <Text>Pris/time: {offer.price} DKK</Text>
+                <Text>Undervisningstype: {offer.type}</Text>
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={() =>
+                    navigation.navigate("InfoToViewOffer", {
+                      name: user.name || "Ukendt bruger",
+                      profileImage: user.profileImage,
+                      studyLine: offer.studyLine,
+                      university: offer.university,
+                      price: offer.price,
+                      type: offer.type,
+                      description: offer.description,
+                      receiverId: offer.createdBy,
+                    })
+                  }
+                >
+                  <Text style={styles.buttonText}>Vis opslag</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        ))}
+          );
+        })}
       </ScrollView>
 
       {/* Add Offer button */}
@@ -151,6 +169,19 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     backgroundColor: "#ddd",
     marginRight: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imageStyle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+  },
+  placeholder: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#ccc",
   },
   cardContent: { flex: 1 },
   button: {
