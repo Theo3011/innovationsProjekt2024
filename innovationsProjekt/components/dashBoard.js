@@ -10,11 +10,11 @@ import { getDatabase, ref, onValue } from "firebase/database";
 import { useNavigation } from "@react-navigation/native";
 
 const Dashboard = () => {
-  const [offers, setOffers] = useState([]); // State til at holde tilbudsdata
-  const [studentNames, setStudentNames] = useState({}); // State til at holde student-navne
+  const [offers, setOffers] = useState([]); // State to hold offer data
+  const [names, setNames] = useState({}); // State to hold student or tutor names
   const navigation = useNavigation();
 
-  // Hent offers fra Firebase
+  // Fetch offers from Firebase
   useEffect(() => {
     const db = getDatabase();
     const offersRef = ref(db, "offers");
@@ -30,27 +30,64 @@ const Dashboard = () => {
       }
     });
 
-    return () => unsubscribeOffers(); // Ryd op efter listener
+    return () => unsubscribeOffers(); // Cleanup after listener
   }, []);
 
-  // Hent student-navne baseret på brugerID (createdBy)
+  // Fetch names (students or tutors) based on user ID (createdBy)
   useEffect(() => {
     const db = getDatabase();
 
-    offers.forEach((offer) => {
-      const studentRef = ref(db, `students/${offer.createdBy}/name`);
-      onValue(studentRef, (snapshot) => {
-        const name = snapshot.val();
-        if (name) {
-          // Opdater studentNames med brugerID som nøgle
-          setStudentNames((prevState) => ({
-            ...prevState,
-            [offer.createdBy]: name,
-          }));
-        }
+    const fetchName = async (id) => {
+      const studentRef = ref(db, `students/${id}/name`);
+      const tutorRef = ref(db, `tutors/${id}/name`);
+
+      return new Promise((resolve) => {
+        // First check if the ID exists in "students"
+        onValue(
+          studentRef,
+          (snapshot) => {
+            if (snapshot.exists()) {
+              resolve(snapshot.val());
+            } else {
+              // If not found in "students", check in "tutors"
+              onValue(
+                tutorRef,
+                (snapshot) => {
+                  if (snapshot.exists()) {
+                    resolve(snapshot.val());
+                  } else {
+                    resolve("Ukendt bruger"); // Default fallback
+                  }
+                },
+                { onlyOnce: true }
+              );
+            }
+          },
+          { onlyOnce: true }
+        );
       });
-    });
-  }, [offers]); // Kør igen, hvis offers ændrer sig
+    };
+
+    const fetchAllNames = async () => {
+      const namePromises = offers.map((offer) =>
+        fetchName(offer.createdBy).then((name) => ({
+          id: offer.createdBy,
+          name,
+        }))
+      );
+
+      const results = await Promise.all(namePromises);
+      const namesMap = results.reduce(
+        (acc, { id, name }) => ({ ...acc, [id]: name }),
+        {}
+      );
+      setNames(namesMap);
+    };
+
+    if (offers.length > 0) {
+      fetchAllNames();
+    }
+  }, [offers]); // Re-run if offers change
 
   return (
     <View style={styles.container}>
@@ -59,10 +96,8 @@ const Dashboard = () => {
           <View key={offer.id} style={styles.card}>
             <View style={styles.profileImage}></View>
             <View style={styles.cardContent}>
-              {/* Hent og vis brugernavn baseret på createdBy */}
-              <Text>
-                Navn: {studentNames[offer.createdBy] || "Ukendt bruger"}
-              </Text>
+              {/* Display the name based on createdBy */}
+              <Text>Navn: {names[offer.createdBy] || "Henter navn..."}</Text>
               <Text>Studielinje: {offer.studyLine}</Text>
               <Text>Universitet: {offer.university}</Text>
               <Text>Pris/time: {offer.price} DKK</Text>
@@ -71,7 +106,7 @@ const Dashboard = () => {
                 style={styles.button}
                 onPress={() =>
                   navigation.navigate("InfoToViewOffer", {
-                    name: studentNames[offer.createdBy] || "Ukendt bruger",
+                    name: names[offer.createdBy] || "Ukendt bruger",
                     studyLine: offer.studyLine,
                     university: offer.university,
                     price: offer.price,
@@ -88,7 +123,7 @@ const Dashboard = () => {
         ))}
       </ScrollView>
 
-      {/* Tilføj opslag knap */}
+      {/* Add Offer button */}
       <TouchableOpacity
         style={styles.addButton}
         onPress={() => navigation.navigate("OfferPage")}
