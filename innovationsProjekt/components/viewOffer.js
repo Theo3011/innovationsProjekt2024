@@ -79,6 +79,8 @@ const ViewOffer = ({ route }) => {
     }
   };
 
+  console.log("imageUrl:", imageUrl); // Test URL værdi
+
   return (
     <ScrollView style={styles.container}>
       {/* Dynamisk overskrift */}

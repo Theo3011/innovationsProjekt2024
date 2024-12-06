@@ -124,7 +124,7 @@ const Dashboard = () => {
                   onPress={() =>
                     navigation.navigate("InfoToViewOffer", {
                       name: user.name || "Ukendt bruger",
-                      profileImage: user.profileImage,
+                      imageUrl: user.profileImage,
                       studyLine: offer.studyLine,
                       university: offer.university,
                       price: offer.price,
