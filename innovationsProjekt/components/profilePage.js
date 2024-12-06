@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  ScrollView,
 } from "react-native";
 import { getDatabase, ref, get, onValue, update, remove } from "firebase/database";
 import { getAuth } from "firebase/auth";
@@ -120,87 +121,95 @@ const ProfilePage = () => {
   }
 
   return (
-    <View style={styles.safeview}>
-      <View style={styles.container}>
-        <Image
-          source={{
-            uri: userData.profileImage || "https://via.placeholder.com/100",
-          }}
-          style={styles.profileImage}
-        />
+    <ScrollView style={styles.scrollView}>
+      <View style={styles.safeview}>
+        <View style={styles.container}>
+          <Image
+            source={{
+              uri: userData.profileImage || "https://via.placeholder.com/100",
+            }}
+            style={styles.profileImage}
+          />
 
-        <Text style={styles.infoText}>
-          <Text style={styles.label}>Navn: </Text>
-          {userData.name || "N/A"}
-        </Text>
-        <Text style={styles.infoText}>
-          <Text style={styles.label}>Alder: </Text>
-          {userData.age || "N/A"}
-        </Text>
-        <Text style={styles.infoText}>
-          <Text style={styles.label}>Universitet: </Text>
-          {userData.university || "N/A"}
-        </Text>
-        <Text style={styles.infoText}>
-          <Text style={styles.label}>Email: </Text>
-          {userData.email || "N/A"}
-        </Text>
-      </View>
+          <Text style={styles.infoText}>
+            <Text style={styles.label}>Navn: </Text>
+            {userData.name || "N/A"}
+          </Text>
+          <Text style={styles.infoText}>
+            <Text style={styles.label}>Alder: </Text>
+            {userData.age || "N/A"}
+          </Text>
+          <Text style={styles.infoText}>
+            <Text style={styles.label}>Universitet: </Text>
+            {userData.university || "N/A"}
+          </Text>
+          <Text style={styles.infoText}>
+            <Text style={styles.label}>Email: </Text>
+            {userData.email || "N/A"}
+          </Text>
+        </View>
 
-      <View style={styles.sessionContainer}>
-        <Text style={styles.sessionTitle}>
-          {userType === "tutor"
-            ? "Kommende Tutor-Sessions"
-            : "Kommende Sessions"}
-        </Text>
-        {userSessions.length > 0 ? (
-          userSessions.map((session) => (
-            <View key={session.id} style={styles.sessionBox}>
-              <Text style={styles.sessionText}>
-                <Text style={styles.label}>
-                  {userType === "tutor" ? "Student Message: " : "Tutor Name: "}
+        <View style={styles.sessionContainer}>
+          <Text style={styles.sessionTitle}>
+            {userType === "tutor"
+              ? "Kommende Tutor-Sessions"
+              : "Kommende Sessions"}
+          </Text>
+          {userSessions.length > 0 ? (
+            userSessions.map((session) => (
+              <View key={session.id} style={styles.sessionBox}>
+                <Text style={styles.sessionText}>
+                  <Text style={styles.label}>
+                    {userType === "tutor" ? "Student Message: " : "Tutor Name: "}
+                  </Text>
+                  {userType === "tutor"
+                    ? session.studentMessage
+                    : session.tutorName}
                 </Text>
-                {userType === "tutor" ? session.studentMessage : session.tutorName}
-              </Text>
-              <Text style={styles.sessionText}>
-                <Text style={styles.label}>Dato: </Text>
-                {session.date}
-              </Text>
-              <Text style={styles.sessionText}>
-                <Text style={styles.label}>Tid: </Text>
-                {session.time}
-              </Text>
-              {userType === "tutor" && session.status === "pending" && (
-                <View style={styles.buttonContainer}>
-                  <TouchableOpacity
-                    style={[styles.button, styles.acceptButton]}
-                    onPress={() =>
-                      handleSessionAction(session.id, session.studentId, "accept")
-                    }
-                  >
-                    <Text style={styles.buttonText}>Accepter</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.button, styles.rejectButton]}
-                    onPress={() =>
-                      handleSessionAction(session.id, session.studentId, "reject")
-                    }
-                  >
-                    <Text style={styles.buttonText}>Afvis</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-          ))
-        ) : (
-          <Text style={styles.sessionText}>Ingen kommende sessions</Text>
-        )}
+                <Text style={styles.sessionText}>
+                  <Text style={styles.label}>Dato: </Text>
+                  {session.date}
+                </Text>
+                <Text style={styles.sessionText}>
+                  <Text style={styles.label}>Tid: </Text>
+                  {session.time}
+                </Text>
+                {userType === "tutor" && session.status === "pending" && (
+                  <View style={styles.buttonContainer}>
+                    <TouchableOpacity
+                      style={[styles.button, styles.acceptButton]}
+                      onPress={() =>
+                        handleSessionAction(session.id, session.studentId, "accept")
+                      }
+                    >
+                      <Text style={styles.buttonText}>Accepter</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.button, styles.rejectButton]}
+                      onPress={() =>
+                        handleSessionAction(session.id, session.studentId, "reject")
+                      }
+                    >
+                      <Text style={styles.buttonText}>Afvis</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            ))
+          ) : (
+            <Text style={styles.sessionText}>Ingen kommende sessions</Text>
+          )}
+        </View>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+  },
   safeview: { flex: 1, backgroundColor: "#f5f5f5" },
   container: {
     justifyContent: "center",
