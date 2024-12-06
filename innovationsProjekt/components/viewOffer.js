@@ -21,7 +21,12 @@ const ViewOffer = ({ route }) => {
   const handleStartChat = async () => {
     if (!currentUserId || !receiverIdq) {
       Alert.alert("Fejl", "Kunne ikke finde brugeren eller tutorens ID.");
-      console.error("currentUserId:", currentUserId, "receiverIdq:", receiverIdq); // Debug-log
+      console.error(
+        "currentUserId:",
+        currentUserId,
+        "receiverIdq:",
+        receiverIdq
+      ); // Debug-log
       return;
     }
 
@@ -71,7 +76,15 @@ const ViewOffer = ({ route }) => {
         <TouchableOpacity style={styles.button} onPress={handleStartChat}>
           <Text style={styles.buttonText}>Skriv til tutor</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, styles.secondaryButton]}>
+        <TouchableOpacity
+          style={[styles.button, styles.secondaryButton]}
+          onPress={() =>
+            navigation.navigate("BookSession", {
+              tutorId: receiverIdq,
+              tutorName: name,
+            })
+          }
+        >
           <Text style={[styles.buttonText, styles.secondaryButtonText]}>
             Book session
           </Text>
