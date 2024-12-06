@@ -97,9 +97,10 @@ const ProfilePage = () => {
     // Set the session for the tutor
     const tutorSessionRef = ref(db, `tutors/${tutorId}/sessions/${sessionId}`);
     await set(tutorSessionRef, {
-      ...sessionData,
-      status: "pending", // Initial status
+      tutorId: tutorId,
       studentId: studentId,
+      status: "pending", // Initial status
+      ...sessionData,
     });
 
     // Set the session for the student
@@ -108,18 +109,19 @@ const ProfilePage = () => {
       `students/${studentId}/sessions/${sessionId}`
     );
     await set(studentSessionRef, {
-      ...sessionData,
-      status: "pending", // Initial status
       tutorId: tutorId,
+      studentId: studentId,
+      status: "pending", // Initial status
+      ...sessionData,
     });
 
     // Optionally, add the session to the main "sessions" path as well if you want to store it globally
     const globalSessionRef = ref(db, `sessions/${sessionId}`);
     await set(globalSessionRef, {
-      ...sessionData,
-      status: "pending", // Initial status
-      studentId: studentId,
       tutorId: tutorId,
+      studentId: studentId,
+      status: "pending", // Initial status
+      ...sessionData,
     });
   };
 
@@ -225,7 +227,7 @@ const ProfilePage = () => {
               <View key={session.id} style={styles.sessionBox}>
                 <Text style={styles.sessionText}>
                   <Text style={styles.label}>Session ID: </Text>
-                  {session.id} {/* Vist session ID */}
+                  {session.id}
                 </Text>
                 <Text style={styles.sessionText}>
                   <Text style={styles.label}>
