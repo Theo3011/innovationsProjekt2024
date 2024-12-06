@@ -16,6 +16,8 @@ import {
   onValue,
   update,
   remove,
+  push,
+  set,
 } from "firebase/database";
 import { getAuth } from "firebase/auth";
 
@@ -23,7 +25,7 @@ const ProfilePage = () => {
   const [userData, setUserData] = useState(null);
   const [userSessions, setUserSessions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [userType, setUserType] = useState(null); // "student" eller "tutor"
+  const [userType, setUserType] = useState(null); // "student" or "tutor"
   const [studentId, setStudentId] = useState(null); // Store studentId if needed
   const [tutorId, setTutorId] = useState(null); // Store tutorId if needed
 
@@ -75,13 +77,49 @@ const ProfilePage = () => {
       const data = snapshot.val();
       if (data) {
         const sessionsArray = Object.keys(data).map((key) => ({
-          id: key,
+          id: key, // Session ID
           ...data[key],
         }));
         setUserSessions(sessionsArray);
       } else {
         setUserSessions([]);
       }
+    });
+  };
+
+  const createSession = async (studentId, tutorId, sessionData) => {
+    const db = getDatabase();
+    const sessionRef = ref(db, "sessions"); // A common "sessions" location
+    const newSessionRef = push(sessionRef); // Generates a unique ID
+
+    const sessionId = newSessionRef.key; // This session ID will be the same for both tutor and student
+
+    // Set the session for the tutor
+    const tutorSessionRef = ref(db, `tutors/${tutorId}/sessions/${sessionId}`);
+    await set(tutorSessionRef, {
+      ...sessionData,
+      status: "pending", // Initial status
+      studentId: studentId,
+    });
+
+    // Set the session for the student
+    const studentSessionRef = ref(
+      db,
+      `students/${studentId}/sessions/${sessionId}`
+    );
+    await set(studentSessionRef, {
+      ...sessionData,
+      status: "pending", // Initial status
+      tutorId: tutorId,
+    });
+
+    // Optionally, add the session to the main "sessions" path as well if you want to store it globally
+    const globalSessionRef = ref(db, `sessions/${sessionId}`);
+    await set(globalSessionRef, {
+      ...sessionData,
+      status: "pending", // Initial status
+      studentId: studentId,
+      tutorId: tutorId,
     });
   };
 
@@ -99,19 +137,20 @@ const ProfilePage = () => {
           db,
           `students/${studentId}/sessions/${sessionId}`
         );
+
         await update(tutorSessionRef, { status: "accepted" });
         await update(studentSessionRef, { status: "accepted" });
 
         Alert.alert("Success", "You have accepted the session!");
       } else if (action === "reject") {
-        // Remove session from tutor's data
+        // Remove session from tutor's data (if the tutor is rejecting the session)
         const tutorSessionRef = ref(
           db,
           `tutors/${userId}/sessions/${sessionId}`
         );
         await remove(tutorSessionRef);
 
-        // Update status to "rejected" for student
+        // Update session status to "rejected" for student (if rejecting)
         const studentSessionRef = ref(
           db,
           `students/${studentId}/sessions/${sessionId}`
@@ -185,6 +224,10 @@ const ProfilePage = () => {
             userSessions.map((session) => (
               <View key={session.id} style={styles.sessionBox}>
                 <Text style={styles.sessionText}>
+                  <Text style={styles.label}>Session ID: </Text>
+                  {session.id} {/* Vist session ID */}
+                </Text>
+                <Text style={styles.sessionText}>
                   <Text style={styles.label}>
                     {userType === "tutor"
                       ? "Student Message: "
@@ -233,7 +276,7 @@ const ProfilePage = () => {
               </View>
             ))
           ) : (
-            <Text style={styles.sessionText}>No upcoming sessions</Text>
+            <Text>No upcoming sessions.</Text>
           )}
         </View>
       </View>
@@ -244,71 +287,78 @@ const ProfilePage = () => {
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    padding: 10,
   },
-  safeview: { flex: 1, backgroundColor: "#f5f5f5" },
+  safeview: {
+    flex: 1,
+  },
   container: {
-    justifyContent: "center",
     alignItems: "center",
-    padding: 20,
-    backgroundColor: "#ffffff",
-    borderRadius: 10,
-    margin: 20,
+    marginVertical: 20,
   },
   profileImage: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    borderWidth: 2,
-    borderColor: "#007BFF",
-    marginBottom: 20,
+    marginBottom: 15,
+  },
+  infoText: {
+    fontSize: 16,
+    marginVertical: 5,
+  },
+  label: {
+    fontWeight: "bold",
   },
   sessionContainer: {
-    backgroundColor: "#ffffff",
-    padding: 20,
-    margin: 20,
-    borderRadius: 10,
-    elevation: 3,
+    marginTop: 30,
+  },
+  sessionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 15,
   },
   sessionBox: {
+    marginBottom: 15,
     padding: 10,
-    borderColor: "#ddd",
     borderWidth: 1,
-    borderRadius: 8,
-    marginBottom: 10,
+    borderColor: "#ddd",
+    borderRadius: 5,
   },
   sessionText: {
-    fontSize: 14,
-    color: "#555",
+    fontSize: 16,
   },
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 10,
   },
+  button: {
+    padding: 10,
+    width: "45%",
+    borderRadius: 5,
+  },
   acceptButton: {
     backgroundColor: "#4CAF50",
-    padding: 10,
-    borderRadius: 5,
-    flex: 1,
-    marginRight: 5,
   },
   rejectButton: {
-    backgroundColor: "#F44336",
-    padding: 10,
-    borderRadius: 5,
-    flex: 1,
-    marginLeft: 5,
+    backgroundColor: "#f44336",
   },
   buttonText: {
     color: "#fff",
     textAlign: "center",
   },
-  sessionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 10,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    fontSize: 16,
+    marginTop: 10,
+  },
+  errorText: {
+    fontSize: 16,
+    color: "red",
   },
 });
 
