@@ -9,16 +9,7 @@ import {
   Alert,
   ScrollView,
 } from "react-native";
-import {
-  getDatabase,
-  ref,
-  get,
-  onValue,
-  update,
-  remove,
-  push,
-  set,
-} from "firebase/database";
+import { getDatabase, ref, onValue, update, remove } from "firebase/database";
 import { getAuth } from "firebase/auth";
 
 const ProfilePage = () => {
@@ -26,8 +17,6 @@ const ProfilePage = () => {
   const [userSessions, setUserSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userType, setUserType] = useState(null); // "student" or "tutor"
-  const [studentId, setStudentId] = useState(null); // Store studentId if needed
-  const [tutorId, setTutorId] = useState(null); // Store tutorId if needed
 
   const auth = getAuth();
   const userId = auth.currentUser?.uid; // Get current logged in userId
@@ -39,130 +28,54 @@ const ProfilePage = () => {
       const tutorRef = ref(db, `tutors/${userId}`);
 
       // Check if user is a student
-      get(studentRef)
-        .then((snapshot) => {
-          if (snapshot.exists()) {
-            setUserType("student");
-            setUserData(snapshot.val());
-            setStudentId(userId); // Store studentId
-            fetchSessions("students", userId);
-          } else {
-            // If not a student, check if the user is a tutor
-            get(tutorRef)
-              .then((snapshot) => {
-                if (snapshot.exists()) {
-                  setUserType("tutor");
-                  setUserData(snapshot.val());
-                  setTutorId(userId); // Store tutorId
-                  fetchSessions("tutors", userId);
-                } else {
-                  console.log("User not found in students or tutors.");
-                }
-              })
-              .catch((error) =>
-                console.error("Error fetching tutor data:", error)
-              );
-          }
-        })
-        .catch((error) => console.error("Error fetching student data:", error))
-        .finally(() => setLoading(false));
+      onValue(studentRef, (snapshot) => {
+        if (snapshot.exists()) {
+          setUserType("student");
+          setUserData(snapshot.val());
+        } else {
+          // If not a student, check if the user is a tutor
+          onValue(tutorRef, (snapshot) => {
+            if (snapshot.exists()) {
+              setUserType("tutor");
+              setUserData(snapshot.val());
+            }
+          });
+        }
+      });
+
+      // Fetch all sessions from Firebase and filter by user involvement
+      const sessionsRef = ref(db, "sessions");
+      onValue(sessionsRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const filteredSessions = Object.keys(data)
+            .map((key) => ({ id: key, ...data[key] }))
+            .filter(
+              (session) =>
+                session.studentId === userId || session.tutorId === userId
+            );
+          setUserSessions(filteredSessions);
+        } else {
+          setUserSessions([]);
+        }
+        setLoading(false);
+      });
     }
   }, [userId]);
 
-  const fetchSessions = (userPath, id) => {
-    const db = getDatabase();
-    const sessionsRef = ref(db, `${userPath}/${id}/sessions`);
-
-    onValue(sessionsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const sessionsArray = Object.keys(data).map((key) => ({
-          id: key, // Session ID
-          ...data[key],
-        }));
-        setUserSessions(sessionsArray);
-      } else {
-        setUserSessions([]);
-      }
-    });
-  };
-
-  const createSession = async (studentId, tutorId, sessionData) => {
-    const db = getDatabase();
-    const sessionRef = ref(db, "sessions"); // A common "sessions" location
-    const newSessionRef = push(sessionRef); // Generates a unique ID
-
-    const sessionId = newSessionRef.key; // This session ID will be the same for both tutor and student
-
-    // Set the session for the tutor
-    const tutorSessionRef = ref(db, `tutors/${tutorId}/sessions/${sessionId}`);
-    await set(tutorSessionRef, {
-      tutorId: tutorId,
-      studentId: studentId,
-      status: "pending", // Initial status
-      ...sessionData,
-    });
-
-    // Set the session for the student
-    const studentSessionRef = ref(
-      db,
-      `students/${studentId}/sessions/${sessionId}`
-    );
-    await set(studentSessionRef, {
-      tutorId: tutorId,
-      studentId: studentId,
-      status: "pending", // Initial status
-      ...sessionData,
-    });
-
-    // Optionally, add the session to the main "sessions" path as well if you want to store it globally
-    const globalSessionRef = ref(db, `sessions/${sessionId}`);
-    await set(globalSessionRef, {
-      tutorId: tutorId,
-      studentId: studentId,
-      status: "pending", // Initial status
-      ...sessionData,
-    });
-  };
-
-  const handleSessionAction = async (sessionId, studentId, action) => {
+  const handleSessionAction = async (sessionId, action) => {
     try {
       const db = getDatabase();
+      const sessionRef = ref(db, `sessions/${sessionId}`);
 
       if (action === "accept") {
-        // Update session status to "accepted" for both tutor and student
-        const tutorSessionRef = ref(
-          db,
-          `tutors/${userId}/sessions/${sessionId}`
-        );
-        const studentSessionRef = ref(
-          db,
-          `students/${studentId}/sessions/${sessionId}`
-        );
-
-        await update(tutorSessionRef, { status: "accepted" });
-        await update(studentSessionRef, { status: "accepted" });
-
+        // Update session status to "accepted"
+        await update(sessionRef, { status: "accepted" });
         Alert.alert("Success", "You have accepted the session!");
       } else if (action === "reject") {
-        // Remove session from tutor's data (if the tutor is rejecting the session)
-        const tutorSessionRef = ref(
-          db,
-          `tutors/${userId}/sessions/${sessionId}`
-        );
-        await remove(tutorSessionRef);
-
-        // Update session status to "rejected" for student (if rejecting)
-        const studentSessionRef = ref(
-          db,
-          `students/${studentId}/sessions/${sessionId}`
-        );
-        await update(studentSessionRef, { status: "rejected" });
-
-        Alert.alert(
-          "Rejected",
-          "The student has been informed of the rejection."
-        );
+        // Update session status to "rejected"
+        await update(sessionRef, { status: "rejected" });
+        Alert.alert("Rejected", "The session has been rejected.");
       }
     } catch (error) {
       console.error("Error handling session:", error);
@@ -217,11 +130,7 @@ const ProfilePage = () => {
         </View>
 
         <View style={styles.sessionContainer}>
-          <Text style={styles.sessionTitle}>
-            {userType === "tutor"
-              ? "Upcoming Tutor Sessions"
-              : "Upcoming Sessions"}
-          </Text>
+          <Text style={styles.sessionTitle}>Sessions</Text>
           {userSessions.length > 0 ? (
             userSessions.map((session) => (
               <View key={session.id} style={styles.sessionBox}>
@@ -251,25 +160,13 @@ const ProfilePage = () => {
                   <View style={styles.buttonContainer}>
                     <TouchableOpacity
                       style={[styles.button, styles.acceptButton]}
-                      onPress={() =>
-                        handleSessionAction(
-                          session.id,
-                          session.studentId,
-                          "accept"
-                        )
-                      }
+                      onPress={() => handleSessionAction(session.id, "accept")}
                     >
                       <Text style={styles.buttonText}>Accept</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[styles.button, styles.rejectButton]}
-                      onPress={() =>
-                        handleSessionAction(
-                          session.id,
-                          session.studentId,
-                          "reject"
-                        )
-                      }
+                      onPress={() => handleSessionAction(session.id, "reject")}
                     >
                       <Text style={styles.buttonText}>Reject</Text>
                     </TouchableOpacity>
@@ -278,7 +175,7 @@ const ProfilePage = () => {
               </View>
             ))
           ) : (
-            <Text>No upcoming sessions.</Text>
+            <Text>No sessions found.</Text>
           )}
         </View>
       </View>
