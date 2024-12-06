@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -8,70 +8,20 @@ import {
   Image,
   Alert,
 } from "react-native";
-import { getDatabase, ref, get } from "firebase/database";
+import { getDatabase, ref, push, set } from "firebase/database";
 import { useNavigation } from "@react-navigation/native";
 import { getAuth } from "firebase/auth";
 
 const ViewOffer = ({ route }) => {
-  // Modtag parametre fra navigation
-  const {
-    name,
-    exam,
-    price,
-    type,
-    description,
-    receiverIdq,
-    imageUrl,
-    createdByUserId,
-  } = route.params; // Tilføj createdByUserId
+  const { name, exam, price, type, description, receiverId } = route.params; // Modtag receiverId korrekt
   const navigation = useNavigation();
   const auth = getAuth();
   const currentUserId = auth.currentUser?.uid; // Den aktuelle bruger
-  const [userRole, setUserRole] = useState(null);
-
-  // Hent brugerens rolle (studenter eller tutor)
-  useEffect(() => {
-    const fetchUserRole = async () => {
-      if (createdByUserId) {
-        const db = getDatabase();
-
-        // Kontroller om createdByUserId findes under "students"
-        const studentRef = ref(db, "students/" + createdByUserId);
-        const studentSnapshot = await get(studentRef);
-
-        // Hvis den findes under "students", så er det en studerende
-        if (studentSnapshot.exists()) {
-          setUserRole("student");
-          return;
-        }
-
-        // Ellers, kontroller om createdByUserId findes under "tutors"
-        const tutorRef = ref(db, "tutors/" + createdByUserId);
-        const tutorSnapshot = await get(tutorRef);
-
-        // Hvis den findes under "tutors", så er det en tutor
-        if (tutorSnapshot.exists()) {
-          setUserRole("tutor");
-          return;
-        }
-
-        // Hvis det ikke findes i nogen af delene, sæt userRole til null
-        setUserRole(null);
-      }
-    };
-
-    fetchUserRole();
-  }, [createdByUserId]);
 
   const handleStartChat = async () => {
-    if (!currentUserId || !receiverIdq) {
+    if (!currentUserId || !receiverId) {
       Alert.alert("Fejl", "Kunne ikke finde brugeren eller tutorens ID.");
-      console.error(
-        "currentUserId:",
-        currentUserId,
-        "receiverIdq:",
-        receiverIdq
-      ); // Debug-log
+      console.error("currentUserId:", currentUserId, "receiverId:", receiverId);
       return;
     }
 
@@ -84,7 +34,7 @@ const ViewOffer = ({ route }) => {
       const chatId = newChatRef.key;
 
       const chatData = {
-        participants: [currentUserId, receiverIdq],
+        participants: [currentUserId, receiverId],
         messages: [],
         lastMessage: "",
         timestamp: Date.now(),
@@ -103,67 +53,106 @@ const ViewOffer = ({ route }) => {
 
   return (
     <ScrollView style={styles.container}>
-      {/* Dynamisk overskrift */}
-      <Text style={styles.header}>
-        {userRole === "tutor"
-          ? "Tutor opslag"
-          : userRole === "student"
-          ? "Studerendes opslag"
-          : "Udefineret bruger"}
-      </Text>
-
+      <Text style={styles.header}>Tutor opslag</Text>
       <View style={styles.profileSection}>
-        {/* Hvis der er et billede-URL, vis det */}
-        {imageUrl ? (
-          <Image source={{ uri: imageUrl }} style={styles.imageStyle} />
-        ) : (
-          <View style={styles.placeholder}></View>
-        )}
-        <Text style={styles.name}>{name}</Text>
+        <Image style={styles.profileImage} />
+        <View style={styles.details}>
+          <Text>Name: {name}</Text>
+          <Text>Eksamen: {exam}</Text>
+          <Text>Pris/time: {price} DKK</Text>
+          <Text>Undervisningstype: {type}</Text>
+        </View>
       </View>
 
-      {/* Vis detaljer om tilbuddet */}
-      <Text>Eksamen: {exam || "Ikke angivet"}</Text>
-      <Text>Pris/time: {price} DKK</Text>
-      <Text>Undervisningstype: {type || "Ikke angivet"}</Text>
-      <Text>Beskrivelse: {description || "Ingen beskrivelse tilgængelig"}</Text>
+      <Text style={styles.subHeader}>Beskrivelse:</Text>
+      <Text style={styles.description}>{description}</Text>
 
-      {/* Knap til at starte en chat */}
-      <TouchableOpacity style={styles.button} onPress={handleStartChat}>
-        <Text style={styles.buttonText}>Start chat</Text>
-      </TouchableOpacity>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.button} onPress={handleStartChat}>
+          <Text style={styles.buttonText}>Skriv til tutor</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, styles.secondaryButton]}
+          onPress={() =>
+            navigation.navigate("BookSession", {
+              tutorId: receiverId, // Send receiverId videre
+              tutorName: name,
+            })
+          }
+        >
+          <Text style={[styles.buttonText, styles.secondaryButtonText]}>
+            Book session
+          </Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { padding: 20, backgroundColor: "#fff" },
-  header: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
+  container: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+    padding: 20,
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    color: "#333",
+    textAlign: "center",
+  },
   profileSection: {
     flexDirection: "row",
-    marginBottom: 20,
     alignItems: "center",
+    marginBottom: 20,
   },
-  imageStyle: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    marginRight: 10,
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "#ddd",
+    marginRight: 20,
   },
-  placeholder: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: "#ccc",
+  details: {
+    flex: 1,
   },
-  name: { fontSize: 18, fontWeight: "bold" },
+  subHeader: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  description: {
+    fontSize: 16,
+    color: "#555",
+    marginBottom: 20,
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+  },
   button: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: "#007bff",
-    borderRadius: 5,
+    padding: 15,
+    backgroundColor: "#007BFF",
+    borderRadius: 10,
+    flex: 1,
+    alignItems: "center",
+    marginHorizontal: 5,
   },
-  buttonText: { color: "#fff", textAlign: "center" },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  secondaryButton: {
+    backgroundColor: "#f0f0f0",
+  },
+  secondaryButtonText: {
+    color: "#007BFF",
+  },
 });
 
 export default ViewOffer;
+
+
+
