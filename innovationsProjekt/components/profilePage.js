@@ -8,22 +8,43 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { getDatabase, ref, get } from "firebase/database";
-import { firebaseAuth } from "../firebase";
+import { getDatabase, ref, get, onValue } from "firebase/database";
+import { getAuth } from "firebase/auth";
 
 const ProfilePage = () => {
   const [userData, setUserData] = useState(null);
+  const [userSessions, setUserSessions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const userId = firebaseAuth.currentUser?.uid;
+  const auth = getAuth();
+  const userId = auth.currentUser?.uid;
 
-  // I useEffect til at hente tutorens sessions
+  // Fetch user data
   useEffect(() => {
     if (userId) {
       const db = getDatabase();
-      const sessionsRef = ref(db, `tutors/${userId}/sessions`);
+      const userRef = ref(db, `students/${userId}`); // Adjust path based on your database structure
 
-      onValue(sessionsRef, (snapshot) => {
+      get(userRef)
+        .then((snapshot) => {
+          if (snapshot.exists()) {
+            setUserData(snapshot.val());
+          } else {
+            console.log("User data not found!");
+          }
+        })
+        .catch((error) => console.error("Error fetching user data:", error))
+        .finally(() => setLoading(false));
+    }
+  }, [userId]);
+
+  // Fetch sessions
+  useEffect(() => {
+    if (userId) {
+      const db = getDatabase();
+      const sessionsRef = ref(db, `tutors/${userId}/sessions`); // Adjust path based on your database structure
+
+      const unsubscribe = onValue(sessionsRef, (snapshot) => {
         const data = snapshot.val();
         if (data) {
           const sessionsArray = Object.keys(data).map((key) => ({
@@ -31,8 +52,12 @@ const ProfilePage = () => {
             ...data[key],
           }));
           setUserSessions(sessionsArray);
+        } else {
+          setUserSessions([]);
         }
       });
+
+      return () => unsubscribe(); // Cleanup listener
     }
   }, [userId]);
 
@@ -53,10 +78,8 @@ const ProfilePage = () => {
     );
   }
 
-  // Handlers for knapper
   const handleEditDetails = () => {
     Alert.alert("Edit Details", "Redirecting to edit details page...");
-    // Tilføj navigation til redigeringsside her
   };
 
   const handleForgotPassword = () => {
@@ -64,18 +87,15 @@ const ProfilePage = () => {
       "Reset Password",
       "A password reset link has been sent to your email."
     );
-    // Tilføj funktion til at sende glemt adgangskode e-mail
   };
 
   const handlePrintReviews = () => {
     Alert.alert("Print Reviews", "Fetching reviews for printing...");
-    // Tilføj funktion til at printe eller vise anmeldelser
   };
 
   return (
     <View style={styles.safeview}>
       <View style={styles.container}>
-        {/* Profilbillede */}
         <Image
           source={{
             uri: userData.profileImage || "https://via.placeholder.com/100",
@@ -83,7 +103,6 @@ const ProfilePage = () => {
           style={styles.profileImage}
         />
 
-        {/* Brugeroplysninger */}
         <Text style={styles.infoText}>
           <Text style={styles.label}>Name: </Text>
           {userData.name || "N/A"}
@@ -94,14 +113,13 @@ const ProfilePage = () => {
         </Text>
         <Text style={styles.infoText}>
           <Text style={styles.label}>University: </Text>
-          {userData.study || "N/A"}
+          {userData.university || "N/A"}
         </Text>
         <Text style={styles.infoText}>
           <Text style={styles.label}>Email: </Text>
           {userData.email || "N/A"}
         </Text>
 
-        {/* Knapper */}
         <TouchableOpacity style={styles.button} onPress={handleEditDetails}>
           <Text style={styles.buttonText}>Ændre oplysninger</Text>
         </TouchableOpacity>
@@ -115,7 +133,6 @@ const ProfilePage = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Kommende Tutor-Sessions */}
       <View style={styles.sessionContainer}>
         <Text style={styles.sessionTitle}>Kommende Tutor-Sessions</Text>
         {userSessions.length > 0 ? (
@@ -201,44 +218,15 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sessionBox: {
-    flexDirection: "row",
-    alignItems: "center",
     padding: 10,
     borderColor: "#ddd",
     borderWidth: 1,
     borderRadius: 8,
-  },
-  sessionImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 10,
-  },
-  sessionDetails: {
-    flex: 1,
+    marginBottom: 10,
   },
   sessionText: {
     fontSize: 14,
     color: "#555",
-  },
-  sessionDate: {
-    fontSize: 14,
-    color: "#757575",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f5f5f5",
-  },
-  loadingText: {
-    marginTop: 10,
-    color: "#555",
-    fontSize: 16,
-  },
-  errorText: {
-    color: "red",
-    fontSize: 16,
   },
 });
 
