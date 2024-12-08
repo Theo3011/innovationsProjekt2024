@@ -20,10 +20,9 @@ const ChatPage = () => {
       const data = snapshot.val();
       if (data) {
         const loadedChats = Object.keys(data).map((key) => {
-          const messages = data[key].messages || {}; // Hent beskederne
+          const messages = data[key].messages || {};
           const messageArray = Object.values(messages);
 
-          // Find den seneste besked
           const latestMessageObj =
             messageArray.length > 0
               ? messageArray.sort((a, b) => b.timestamp - a.timestamp)[0]
@@ -31,8 +30,9 @@ const ChatPage = () => {
 
           return {
             id: key,
-            name: data[key].name,
-            latestMessage: latestMessageObj?.text || "No messages yet",
+            name: data[key].name || "Ingen navn",
+            author: data[key].author || "Ukendt",
+            latestMessage: latestMessageObj?.text || "Ingen besked endnu",
             timestamp: latestMessageObj
               ? new Date(latestMessageObj.timestamp).toLocaleTimeString([], {
                   hour: "2-digit",
@@ -51,6 +51,20 @@ const ChatPage = () => {
     navigation.navigate("PrivateChat", { chatId, chatName });
   };
 
+  const parseText = (text) => {
+    const parts = text.split("**");
+    return parts.map((part, index) => {
+      if (index % 2 === 1) {
+        return (
+          <Text key={index} style={styles.boldText}>
+            {part}
+          </Text>
+        );
+      }
+      return part;
+    });
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Chat</Text>
@@ -63,8 +77,9 @@ const ChatPage = () => {
             onPress={() => handleChatPress(item.id, item.name)}
           >
             <View style={styles.chatDetails}>
+              <Text style={styles.chatAuthor}>Skriver: {item.author}</Text>
               <Text style={styles.chatName}>{item.name}</Text>
-              <Text style={styles.latestMessage}>{item.latestMessage}</Text>
+              <Text style={styles.latestMessage}>{parseText(item.latestMessage)}</Text>
             </View>
             <Text style={styles.timestamp}>{item.timestamp}</Text>
           </TouchableOpacity>
@@ -101,6 +116,11 @@ const styles = StyleSheet.create({
   chatDetails: {
     flex: 1,
   },
+  chatAuthor: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#333",
+  },
   chatName: {
     fontSize: 16,
     fontWeight: "bold",
@@ -112,6 +132,9 @@ const styles = StyleSheet.create({
   timestamp: {
     fontSize: 12,
     color: "#757575",
+  },
+  boldText: {
+    fontWeight: "bold",
   },
 });
 
