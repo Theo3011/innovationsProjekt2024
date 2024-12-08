@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
     color: "#888",
   },
   selectedRole: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#007BFF", // Ændret fra grøn til blå
     color: "white",
   },
   roleContainer: {
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   button: {
-    backgroundColor: "#28A745",
+    backgroundColor: "#007BFF", // Ændret fra grøn til blå
     padding: 15,
     borderRadius: 8,
     width: "90%",
