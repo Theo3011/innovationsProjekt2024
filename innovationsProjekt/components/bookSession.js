@@ -118,8 +118,7 @@ const BookSession = () => {
       )}
       <Text style={styles.selectedText}>
         Valgt dato: {date.toISOString().split("T")[0]}
-      </Text>{" "}
-      {/* Viser valgt dato */}
+      </Text>
       <TouchableOpacity
         style={styles.dateButton}
         onPress={() => setShowTimePicker(true)}
@@ -136,8 +135,7 @@ const BookSession = () => {
       )}
       <Text style={styles.selectedText}>
         Valgt tid: {time.toISOString().split("T")[1].slice(0, 5)}
-      </Text>{" "}
-      {/* Viser valgt tid */}
+      </Text>
       <TextInput
         style={styles.textInput}
         placeholder="Skriv en besked til tutor..."
@@ -194,6 +192,11 @@ const styles = StyleSheet.create({
     marginTop: 20,
     backgroundColor: "#fff",
     color: "#333",
+  },
+  selectedText: {
+    fontSize: 16,
+    color: "#333",
+    marginVertical: 5,
   },
 });
 
