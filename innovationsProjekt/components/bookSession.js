@@ -52,19 +52,19 @@ const BookSession = () => {
       const db = getDatabase();
       const timestamp = Date.now();
 
-      // Opret session for både tutor og student
-      const sessionRef = ref(db, "sessions"); // Global session reference
+      // Opret session
+      const sessionRef = ref(db, "sessions");
       const newSessionRef = push(sessionRef);
-      const sessionId = newSessionRef.key; // Generer session ID
+      const sessionId = newSessionRef.key;
 
       const sessionData = {
         tutor: {
           tutorId: tutorId,
-          status: "pending", // Tutor status er "pending"
+          status: "pending",
         },
         student: {
           studentId: currentUserId,
-          status: "pending", // Student status er "pending"
+          status: "pending",
           message: message,
           date: date.toISOString().split("T")[0],
           time: time.toISOString().split("T")[1].slice(0, 5),
@@ -73,8 +73,24 @@ const BookSession = () => {
         timestamp,
       };
 
-      // Sæt session data til den genererede session
       await set(newSessionRef, sessionData);
+
+      // Opret besked i tutorens chat
+      const chatRef = ref(db, `chats/${tutorId}/messages`);
+      const formattedMessage = `**Vedkommende har anmodet session den ${
+        date.toISOString().split("T")[0]
+      }, klokken ${time
+        .toISOString()
+        .split("T")[1]
+        .slice(
+          0,
+          5
+        )}. Du kan acceptere anmodningen under Min Profil -> Kommende Sessioner.**\n\n${message}`;
+
+      await push(chatRef, {
+        text: formattedMessage,
+        timestamp,
+      });
 
       Alert.alert("Succes", "Anmodning sendt!");
     } catch (error) {
@@ -100,6 +116,10 @@ const BookSession = () => {
           onChange={handleDateChange}
         />
       )}
+      <Text style={styles.selectedText}>
+        Valgt dato: {date.toISOString().split("T")[0]}
+      </Text>{" "}
+      {/* Viser valgt dato */}
       <TouchableOpacity
         style={styles.dateButton}
         onPress={() => setShowTimePicker(true)}
@@ -114,6 +134,10 @@ const BookSession = () => {
           onChange={handleTimeChange}
         />
       )}
+      <Text style={styles.selectedText}>
+        Valgt tid: {time.toISOString().split("T")[1].slice(0, 5)}
+      </Text>{" "}
+      {/* Viser valgt tid */}
       <TextInput
         style={styles.textInput}
         placeholder="Skriv en besked til tutor..."

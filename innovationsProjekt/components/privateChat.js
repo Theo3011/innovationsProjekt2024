@@ -55,7 +55,17 @@ const PrivateChat = ({ route }) => {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.messageContainer}>
-            <Text style={styles.messageText}>{item.text}</Text>
+            {item.text.includes("**") ? (
+              <Text style={styles.messageText}>
+                <Text style={styles.boldText}>
+                  {item.text.split("**")[1]} {/* Fed tekst */}
+                </Text>
+                {"\n\n"}
+                {item.text.split("**")[2]} {/* Brugerbeskeden */}
+              </Text>
+            ) : (
+              <Text style={styles.messageText}>{item.text}</Text>
+            )}
             <Text style={styles.timestamp}>
               {new Date(item.timestamp).toLocaleTimeString()}
             </Text>
@@ -63,6 +73,7 @@ const PrivateChat = ({ route }) => {
         )}
         inverted
       />
+
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -79,6 +90,9 @@ const PrivateChat = ({ route }) => {
 };
 
 const styles = StyleSheet.create({
+  boldText: {
+    fontWeight: "bold",
+  },
   container: {
     flex: 1,
     backgroundColor: "#f5f5f5",
