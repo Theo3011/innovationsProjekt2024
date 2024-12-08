@@ -19,12 +19,28 @@ const ChatPage = () => {
     const unsubscribe = onValue(chatsRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        const loadedChats = Object.keys(data).map((key) => ({
-          id: key,
-          name: data[key].name,
-          latestMessage: data[key].latestMessage || "No messages yet",
-          timestamp: data[key].timestamp,
-        }));
+        const loadedChats = Object.keys(data).map((key) => {
+          const messages = data[key].messages || {}; // Hent beskederne
+          const messageArray = Object.values(messages);
+
+          // Find den seneste besked
+          const latestMessageObj =
+            messageArray.length > 0
+              ? messageArray.sort((a, b) => b.timestamp - a.timestamp)[0]
+              : null;
+
+          return {
+            id: key,
+            name: data[key].name,
+            latestMessage: latestMessageObj?.text || "No messages yet",
+            timestamp: latestMessageObj
+              ? new Date(latestMessageObj.timestamp).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "",
+          };
+        });
         setChats(loadedChats);
       }
     });
