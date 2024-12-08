@@ -8,7 +8,7 @@ import {
   Alert,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { getDatabase, ref, push, set } from "firebase/database";
+import { getDatabase, ref, push, set, onValue } from "firebase/database";
 import { useRoute } from "@react-navigation/native";
 import { getAuth } from "firebase/auth";
 
@@ -52,6 +52,27 @@ const BookSession = () => {
       const db = getDatabase();
       const timestamp = Date.now();
 
+      // Hent afsenderens navn fra databasen
+      const userRef = ref(db, `users/${currentUserId}`);
+      let senderName = "Ukendt Bruger"; // Standardværdi
+
+      // Async opslag af brugerens navn
+      await new Promise((resolve, reject) => {
+        onValue(
+          userRef,
+          (snapshot) => {
+            const userData = snapshot.val();
+            if (userData && userData.name) {
+              senderName = userData.name; // Hent brugerens navn
+            }
+            resolve();
+          },
+          {
+            onlyOnce: true, // Sørger for at vi kun lytter én gang
+          }
+        );
+      });
+
       // Opret session
       const sessionRef = ref(db, "sessions");
       const newSessionRef = push(sessionRef);
@@ -64,6 +85,7 @@ const BookSession = () => {
         },
         student: {
           studentId: currentUserId,
+          studentName: senderName, // Tilføj brugerens navn
           status: "pending",
           message: message,
           date: date.toISOString().split("T")[0],
@@ -77,7 +99,7 @@ const BookSession = () => {
 
       // Opret besked i tutorens chat
       const chatRef = ref(db, `chats/${tutorId}/messages`);
-      const formattedMessage = `**Vedkommende har anmodet session den ${
+      const formattedMessage = `**${senderName} har anmodet session den ${
         date.toISOString().split("T")[0]
       }, klokken ${time
         .toISOString()
@@ -89,6 +111,8 @@ const BookSession = () => {
 
       await push(chatRef, {
         text: formattedMessage,
+        senderId: currentUserId, // Tilføj afsenderens ID
+        senderName: senderName, // Tilføj afsenderens navn
         timestamp,
       });
 
