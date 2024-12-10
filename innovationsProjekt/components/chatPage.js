@@ -77,9 +77,11 @@ const ChatPage = () => {
             onPress={() => handleChatPress(item.id, item.name)}
           >
             <View style={styles.chatDetails}>
-              <Text style={styles.chatAuthor}>Bruger: {item.author}</Text>
+              <Text style={styles.chatAuthor}>Skriver: {item.author}</Text>
               <Text style={styles.chatName}>{item.name}</Text>
-              <Text style={styles.latestMessage}>{parseText(item.latestMessage)}</Text>
+              <Text style={styles.latestMessage}>
+                {parseText(item.latestMessage)}
+              </Text>
             </View>
             <Text style={styles.timestamp}>{item.timestamp}</Text>
           </TouchableOpacity>
