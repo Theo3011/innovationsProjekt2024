@@ -48,8 +48,8 @@ const CreateLoginPage = () => {
     { label: "Aalborg Universitet (AAU)", value: "aau" },
     { label: "Roskilde Universitet (RUC)", value: "ruc" },
     { label: "Danmarks Tekniske Universitet (DTU)", value: "dtu" },
-    { label: "IT-Universitetet i København (ITU)", value: "itu" },
     { label: "CBS - Copenhagen Business School", value: "cbs" },
+    { label: "IT-Universitetet i København (ITU)", value: "itu" },
   ];
 
   const studyLineData = {
@@ -66,6 +66,27 @@ const CreateLoginPage = () => {
     sdu: [
       { label: "Erhvervsøkonomi", value: "business" },
       { label: "Ingeniørvidenskab", value: "engineering" },
+    ],
+    aau: [
+      { label: "Elektronik og IT", value: "eit" },
+      { label: "Arkitektur", value: "architecture" },
+    ],
+    ruc: [
+      { label: "Socialvidenskab", value: "social" },
+      { label: "Humaniora", value: "humanities" },
+    ],
+    dtu: [
+      { label: "Bygningsingeniør", value: "civilEng" },
+      { label: "Maskiningeniør", value: "mechEng" },
+    ],
+    itu: [
+      { label: "Softwareudvikling", value: "software" },
+      { label: "Digitale Medier", value: "digitalMedia" },
+    ],
+    cbs: [
+      { label: "International Business", value: "intBusiness" },
+      { label: "Finansiering", value: "finance" },
+      { label: "Ha It.", value: "HaIt" },
     ],
   };
 
