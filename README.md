@@ -19,5 +19,5 @@ Følg disse trin for at installere og køre appen lokalt:
    ```
 
    ```
-       expo start
+    expo start
    ```
