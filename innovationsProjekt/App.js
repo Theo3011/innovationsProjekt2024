@@ -6,16 +6,16 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 
-// Import af skærme
-import LoginCreatePage from "./components/loginCreatePage";
-import DashBoard from "./components/dashBoard";
-import ChatPage from "./components/chatPage";
-import Settings from "./components/settings";
-import ProfilePage from "./components/profilePage";
-import OfferPage from "./components/offerPage";
-import PrivateChat from "./components/privateChat";
-import viewOffer from "./components/viewOffer";
-import BookSession from "./components/bookSession";
+// Import af screen fra mappen
+import LoginCreatePage from "./screens/loginCreatePage";
+import DashBoard from "./screens/dashBoard";
+import ChatPage from "./screens/chatPage";
+import Settings from "./screens/settings";
+import ProfilePage from "./screens/profilePage";
+import OfferPage from "./screens/offerPage";
+import PrivateChat from "./screens/privateChat";
+import viewOffer from "./screens/viewOffer";
+import BookSession from "./screens/bookSession";
 
 // Initialiser navigatører
 const Stack = createStackNavigator();

@@ -9,14 +9,15 @@ import {
   Alert,
   ScrollView,
 } from "react-native";
-import { getDatabase, ref, onValue, update, remove } from "firebase/database"; // Importer 'remove'
+import { getDatabase, ref, onValue, update, remove } from "firebase/database";
 import { getAuth } from "firebase/auth";
+import Icon from "react-native-vector-icons/FontAwesome"; // Import stjerne-ikoner
 
 const ProfilePage = () => {
   const [userData, setUserData] = useState(null);
   const [userSessions, setUserSessions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [userType, setUserType] = useState(null); // "student" or "tutor"
+  const [userType, setUserType] = useState(null);
 
   const auth = getAuth();
   const userId = auth.currentUser?.uid;
@@ -70,14 +71,12 @@ const ProfilePage = () => {
       const sessionRef = ref(db, `sessions/${sessionId}`);
 
       if (action === "accept") {
-        // Update status to "accepted" for both tutor and student
         await update(sessionRef, {
           "student/status": "accepted",
           "tutor/status": "accepted",
         });
         Alert.alert("Success", "Session accepted!");
       } else if (action === "reject") {
-        // Delete the session from Firebase
         await remove(sessionRef);
         Alert.alert("Rejected", "Session has been deleted.");
       }
@@ -109,6 +108,21 @@ const ProfilePage = () => {
             <Text style={styles.userDetails}>Age: {userData.age}</Text>
             <Text style={styles.userDetails}>University: {userData.study}</Text>
             <Text style={styles.userDetails}>Email: {userData.email}</Text>
+
+            {/* Stjerner for profilen */}
+            <View style={styles.starsContainer}>
+              {Array(5)
+                .fill(null)
+                .map((_, index) => (
+                  <Icon
+                    key={index}
+                    name="star-o" // Tom stjerne
+                    size={24}
+                    color="#FFD700" // Guld farve
+                    style={styles.starIcon}
+                  />
+                ))}
+            </View>
           </View>
         )}
       </View>
@@ -124,6 +138,21 @@ const ProfilePage = () => {
             <Text style={styles.sessionText}>
               Message: {session.student.message}
             </Text>
+
+            {/* Stjerner for hver session */}
+            <View style={styles.starsContainer}>
+              {Array(5)
+                .fill(null)
+                .map((_, index) => (
+                  <Icon
+                    key={index}
+                    name="star-o" // Tom stjerne
+                    size={20}
+                    color="#FFD700" // Guld farve
+                    style={styles.starIcon}
+                  />
+                ))}
+            </View>
 
             {session.student.status === "pending" && userType === "tutor" && (
               <View style={styles.buttonsContainer}>
@@ -177,6 +206,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#888",
     marginTop: 5,
+  },
+  starsContainer: {
+    flexDirection: "row",
+    marginTop: 10,
+  },
+  starIcon: {
+    marginHorizontal: 5,
   },
   sessionsHeader: {
     fontSize: 20,
