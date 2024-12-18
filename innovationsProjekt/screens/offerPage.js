@@ -26,7 +26,7 @@ const OfferPage = () => {
 
   // Prisdata (eksempel på mulige prisintervaller eller fastlagte priser)
   const priceData = [
-    { label: "155 kr/time", value: "155" },
+    { label: "175 kr/time", value: "175" },
     { label: "200 kr/time", value: "200" },
     { label: "250 kr/time", value: "250" },
     { label: "300 kr/time", value: "300" },

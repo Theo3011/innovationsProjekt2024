@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { getDatabase, ref, onValue, update, remove } from "firebase/database";
 import { getAuth } from "firebase/auth";
-import Icon from "react-native-vector-icons/FontAwesome"; // Import stjerne-ikoner
+import Icon from "react-native-vector-icons/FontAwesome";
 
 const ProfilePage = () => {
   const [userData, setUserData] = useState(null);
