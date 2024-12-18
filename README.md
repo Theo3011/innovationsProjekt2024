@@ -11,6 +11,10 @@ Følg disse trin for at installere og køre appen lokalt:
    ```
 
    ```
+   cd innovationsProjekt2024
+   ```
+
+   ```
    cd innovationsProjekt
    ```
 
@@ -19,5 +23,5 @@ Følg disse trin for at installere og køre appen lokalt:
    ```
 
    ```
-    expo start
+   npx expo start
    ```
