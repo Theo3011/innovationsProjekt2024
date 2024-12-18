@@ -23,5 +23,9 @@ Følg disse trin for at installere og køre appen lokalt:
    ```
 
    ```
+   npm install -g expo-cli
+   ```
+
+   ```
    npx expo start
    ```
