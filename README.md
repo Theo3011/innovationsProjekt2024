@@ -10,9 +10,9 @@ Følg disse trin for at installere og køre appen lokalt:
    git clone <repository-url>
 
    cd innovationsProjekt
-   ```
 
-   npm install
+    npm install
+   ```
 
 ```
     expo start
