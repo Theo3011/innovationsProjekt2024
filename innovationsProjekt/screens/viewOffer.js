@@ -8,10 +8,11 @@ import {
   Image,
   Alert,
 } from "react-native";
-import { getDatabase, ref, get, push, set } from "firebase/database"; // Import push function
+import { getDatabase, ref, get, push, set } from "firebase/database"; // Importerer firebase funktioner vi skal bruge her på siden
 import { useNavigation } from "@react-navigation/native";
 import { getAuth } from "firebase/auth";
 
+// vores komponent der viser detaljer på opslaget der postes
 const ViewOffer = ({ route }) => {
   const {
     name,
@@ -19,33 +20,35 @@ const ViewOffer = ({ route }) => {
     price,
     type,
     description,
-    receiverId,
-    imageUrl, // For the image URL
-    createdByUserId, // User ID who created the offer
-  } = route.params; // Modtag alle de nødvendige parametre
+    receiverId, 
+    imageUrl, 
+    createdByUserId, // ID på den bruger der har oprettet opslaget
+  } = route.params; 
 
   const navigation = useNavigation();
   const auth = getAuth();
-  const currentUserId = auth.currentUser?.uid; // Den aktuelle bruger
-  const [userRole, setUserRole] = useState(null);
+  const currentUserId = auth.currentUser?.uid; // henter den nuværende brugers ID
+  const [userRole, setUserRole] = useState(null); // vi bruger state til at gemme brugers rolle ( er de enten tutor eller student)
 
-  // Fetch user role (student or tutor) and display dynamic header
+  // henter brugerrollen på brugeren baseret på deres bruger ID
   useEffect(() => {
     const fetchUserRole = async () => {
       if (createdByUserId) {
         const db = getDatabase();
-        const userRef = ref(db, "users/" + createdByUserId); // Stien til brugerdata
+        const userRef = ref(db, "users/" + createdByUserId); // Stien til brugerdataen i firebase
         const snapshot = await get(userRef);
         if (snapshot.exists()) {
           const userData = snapshot.val();
-          setUserRole(userData.role); // Antager at 'role' feltet er der
+          setUserRole(userData.role); // opdater state med deres rolle (tutor eller student)
         }
       }
     };
 
-    fetchUserRole();
+    fetchUserRole(); // vi kalder funktionen
   }, [createdByUserId]);
 
+
+// bruger denne funktion til at starte en chat mellem tutor og den studerne 
   const handleStartChat = async () => {
     if (!currentUserId || !receiverId) {
       Alert.alert("Fejl", "Kunne ikke finde brugeren eller tutorens ID.");
@@ -57,9 +60,9 @@ const ViewOffer = ({ route }) => {
       const db = getDatabase();
       const chatsRef = ref(db, "chats");
 
-      // Opret en ny chat mellem den aktuelle bruger og tutoren
-      const newChatRef = push(chatsRef); // Use push to create a new reference for the chat
-      const chatId = newChatRef.key;
+      // Opretter en ny chat mellem den aktuelle bruger og tutoren ved brugen af push
+      const newChatRef = push(chatsRef); 
+      const chatId = newChatRef.key; // får det unikke ID der er for den givet chat
 
       const chatData = {
         participants: [currentUserId, receiverId],
@@ -69,7 +72,7 @@ const ViewOffer = ({ route }) => {
       };
 
       // Gem chatdata i Firebase
-      await set(newChatRef, chatData); // Set chat data to the new chat reference
+      await set(newChatRef, chatData); 
 
       // Naviger til PrivateChat og send chatId og tutorens navn
       navigation.navigate("PrivateChat", { chatId, tutorName: name });
@@ -79,7 +82,7 @@ const ViewOffer = ({ route }) => {
     }
   };
 
-  console.log("imageUrl:", imageUrl); // Test URL værdi
+ 
 
   return (
     <ScrollView style={styles.container}>
@@ -89,7 +92,7 @@ const ViewOffer = ({ route }) => {
       </Text>
 
       <View style={styles.profileSection}>
-        {/* Hvis der er et billede-URL, vis det */}
+        {/* Hvis der er et billede-URL, vises det her */}
         {imageUrl ? (
           <Image source={{ uri: imageUrl }} style={styles.profileImage} />
         ) : (
@@ -130,6 +133,7 @@ const ViewOffer = ({ route }) => {
   );
 };
 
+//styling af siden 
 const styles = StyleSheet.create({
   container: {
     flex: 1,

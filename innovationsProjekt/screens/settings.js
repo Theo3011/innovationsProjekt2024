@@ -2,14 +2,14 @@ import React, { useState } from "react";
 import { View, Text, Switch, StyleSheet, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
-export default function Settings() {
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+export default function Settings() { 
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false); // variabel der styrer om notifikationer er slået til eller nej
 
-  // Hent navigation-objektet
+  // Hent navigation objektet
   const navigation = useNavigation();
 
   const handleLogout = () => {
-    // Naviger brugeren tilbage til login-siden
+    // Naviger brugeren tilbage til login-siden (de logger ud)
     navigation.replace("LoginCreatePage");
   };
 
@@ -26,7 +26,7 @@ export default function Settings() {
         />
       </View>
 
-      {/* Placeholder for Mørkt tema */}
+      {/* Placeholder der viser Mørkt tema indstillingen */}
       <View style={styles.setting}>
         <Text style={styles.settingText}>Mørkt tema (kommer snart)</Text>
       </View>
@@ -38,6 +38,8 @@ export default function Settings() {
     </View>
   );
 }
+
+// styler siden
 
 const styles = StyleSheet.create({
   container: {
