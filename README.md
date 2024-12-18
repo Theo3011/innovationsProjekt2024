@@ -12,9 +12,7 @@ Følg disse trin for at installere og køre appen lokalt:
    cd innovationsProjekt
 
     npm install
+
+     expo start
+
    ```
-
-```
-    expo start
-
-```
