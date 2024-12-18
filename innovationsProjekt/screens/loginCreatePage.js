@@ -12,7 +12,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   ScrollView,
-  Platform, // Tilføj denne linje
+  Platform,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { Dropdown } from "react-native-element-dropdown";
@@ -30,17 +30,20 @@ import {
 import { useNavigation } from "@react-navigation/native";
 
 const CreateLoginPage = () => {
+  // state til håndtering af login eller registrering
   const [isLogin, setIsLogin] = useState(true);
+  // state til at gemme inputfelter for brugerdata
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
-  const [university, setUniversity] = useState(""); // Universitet
-  const [studyLine, setStudyLine] = useState(""); // Studielinje
+  const [university, setUniversity] = useState("");
+  const [studyLine, setStudyLine] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [profileImage, setProfileImage] = useState(null);
-  const [role, setRole] = useState("");
+  const [role, setRole] = useState(""); // sætter brugerrolle (Studerende eller Tutor)
   const navigation = useNavigation();
 
+  // data til universitet og linje
   const universityData = [
     { label: "Aarhus Universitet (AU)", value: "au" },
     { label: "Københavns Universitet (KU)", value: "ku" },
@@ -52,6 +55,7 @@ const CreateLoginPage = () => {
     { label: "IT-Universitetet i København (ITU)", value: "itu" },
   ];
 
+  // studielinjer afhængigt af universitet
   const studyLineData = {
     au: [
       { label: "Matematik", value: "math" },
@@ -90,6 +94,7 @@ const CreateLoginPage = () => {
     ],
   };
 
+  // funktion til at vælge profilbillede
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
@@ -102,10 +107,11 @@ const CreateLoginPage = () => {
       quality: 1,
     });
     if (!result.canceled) {
-      setProfileImage(result.assets[0].uri);
+      setProfileImage(result.assets[0].uri); // sætter valgt billede
     }
   };
 
+  // funktion til at registrere en ny bruger
   const handleRegister = async () => {
     if (
       !name ||
@@ -116,7 +122,7 @@ const CreateLoginPage = () => {
       !password ||
       !role
     ) {
-      alert("Please fill all fields");
+      alert("Please fill all fields"); // kontrollerer om alle felter er udfyldt
       return;
     }
 
@@ -136,8 +142,8 @@ const CreateLoginPage = () => {
         );
         const response = await fetch(profileImage);
         const blob = await response.blob();
-        await uploadBytes(imageRef, blob);
-        imageUrl = await getDownloadURL(imageRef);
+        await uploadBytes(imageRef, blob); // uploader billede til Firebase Storage
+        imageUrl = await getDownloadURL(imageRef); // henter URL for billedet
       }
 
       const userPath = role === "student" ? "students" : "tutors";
@@ -150,22 +156,24 @@ const CreateLoginPage = () => {
         profileImage: imageUrl,
       });
 
-      alert("User registered successfully!");
-      clearForm();
+      alert("User registered successfully!"); // hvis bruger er registreret med succes
+      clearForm(); // Rydder formularen, hvis ja
     } catch (error) {
-      alert("Registration failed: " + error.message);
+      alert("Registration failed: " + error.message); // håndtering af fejl
     }
   };
 
+  // funktion til at logge en bruger ind
   const handleLogin = async () => {
     try {
       await signInWithEmailAndPassword(firebaseAuth, email, password);
-      navigation.replace("MainApp");
+      navigation.replace("MainApp"); // navigerer til hovedappen
     } catch (error) {
-      Alert.alert("Login failed", error.message);
+      Alert.alert("Login failed", error.message); // håndtering af loginfejl
     }
   };
 
+  // funktion til at rydde formularen
   const clearForm = () => {
     setName("");
     setAge("");
@@ -179,7 +187,6 @@ const CreateLoginPage = () => {
 
   return (
     <SafeAreaView style={styles.safeview}>
-      {/* Tilføjet KeyboardAvoidingView og TouchableWithoutFeedback */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
@@ -188,7 +195,7 @@ const CreateLoginPage = () => {
           <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
             <View style={styles.container}>
               <Text style={styles.title}>
-                {isLogin ? "Login" : "Create Account"}
+                {isLogin ? "Login" : "Create Account"}{" "}
               </Text>
               <TextInput
                 placeholder="Email"
@@ -284,6 +291,7 @@ const CreateLoginPage = () => {
                   )}
                 </>
               )}
+
               <TouchableOpacity
                 style={styles.button}
                 onPress={isLogin ? handleLogin : handleRegister}
@@ -292,6 +300,7 @@ const CreateLoginPage = () => {
                   {isLogin ? "Login" : "Register"}
                 </Text>
               </TouchableOpacity>
+
               <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
                 <Text style={styles.switchText}>
                   {isLogin
@@ -310,7 +319,6 @@ const CreateLoginPage = () => {
 export default CreateLoginPage;
 
 const styles = StyleSheet.create({
-  // Samme styles som før
   safeview: {
     flex: 1,
     backgroundColor: "#f5f5f5",

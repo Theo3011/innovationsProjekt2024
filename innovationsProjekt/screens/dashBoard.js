@@ -11,56 +11,58 @@ import { getDatabase, ref, onValue } from "firebase/database";
 import { useNavigation } from "@react-navigation/native";
 
 const Dashboard = () => {
-  const [offers, setOffers] = useState([]); // State to hold offer data
-  const [userDetails, setUserDetails] = useState({}); // State to hold user names and images
+  const [offers, setOffers] = useState([]); // State til at gemme alle offers
+  const [userDetails, setUserDetails] = useState({}); // State til at gemme brugerdata
   const navigation = useNavigation();
 
-  // Fetch offers from Firebase
+  // henter alle offers fra database
   useEffect(() => {
     const db = getDatabase();
-    const offersRef = ref(db, "offers");
+    const offersRef = ref(db, "offers"); // reference til offers i databasen
 
     const unsubscribeOffers = onValue(offersRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
+        // konverter offers til en array
         const offersArray = Object.keys(data).map((key) => ({
           id: key,
           ...data[key],
         }));
-        setOffers(offersArray);
+        setOffers(offersArray); // gemmer tilbudene i state
       }
     });
 
-    return () => unsubscribeOffers(); // Cleanup after listener
+    return () => unsubscribeOffers();
   }, []);
 
-  // Fetch user details (names and images) based on user ID (createdBy)
+  // henter brugeroplysninger
   useEffect(() => {
     const db = getDatabase();
 
     const fetchUserDetails = async (id) => {
-      const studentRef = ref(db, `students/${id}`);
-      const tutorRef = ref(db, `tutors/${id}`);
+      const studentRef = ref(db, `students/${id}`); // kontrollerer i "students" tabellen fra firebase
+      const tutorRef = ref(db, `tutors/${id}`); // kontrollerer i "tutors" tabellen fra firebase
 
       return new Promise((resolve) => {
-        // First check if the ID exists in "students"
+        // henter brugeroplysninger fra "students"
         onValue(
           studentRef,
           (snapshot) => {
             if (snapshot.exists()) {
-              resolve(snapshot.val()); // Return student details
+              resolve(snapshot.val()); // Bruger fundet i "students"
             } else {
-              // If not found in "students", check in "tutors"
+              // Hvis ikke fundet i "students", check i "tutors"
               onValue(
                 tutorRef,
                 (snapshot) => {
                   if (snapshot.exists()) {
-                    resolve(snapshot.val()); // Return tutor details
+                    resolve(snapshot.val()); // Bruger fundet i "tutors"
                   } else {
+                    // hvis bruger ikke findes, returner default data
                     resolve({
                       name: "Ukendt bruger",
                       profileImage: null,
-                    }); // Default fallback
+                    });
                   }
                 },
                 { onlyOnce: true }
@@ -72,6 +74,7 @@ const Dashboard = () => {
       });
     };
 
+    // henter detaljer for alle brugere og gem dem i en map med bruger-ID som nøgle
     const fetchAllUserDetails = async () => {
       const userPromises = offers.map((offer) =>
         fetchUserDetails(offer.createdBy).then((details) => ({
@@ -85,22 +88,21 @@ const Dashboard = () => {
         (acc, { id, details }) => ({ ...acc, [id]: details }),
         {}
       );
-      setUserDetails(userDetailsMap);
+      setUserDetails(userDetailsMap); // gemmer brugeroplysninger i state
     };
 
     if (offers.length > 0) {
-      fetchAllUserDetails();
+      fetchAllUserDetails(); // kører kun hvis tilbud er tilgængelige
     }
-  }, [offers]); // Re-run if offers change
+  }, [offers]);
 
   return (
     <View style={styles.container}>
       <ScrollView style={styles.list}>
         {offers.map((offer) => {
-          const user = userDetails[offer.createdBy] || {}; // Fetch user details
+          const user = userDetails[offer.createdBy] || {}; // henter brugeroplysninger for dette tilbud
           return (
             <View key={offer.id} style={styles.card}>
-              {/* Display profile image */}
               <View style={styles.profileImage}>
                 {user.profileImage ? (
                   <Image
@@ -108,17 +110,17 @@ const Dashboard = () => {
                     style={styles.imageStyle}
                   />
                 ) : (
-                  <View style={styles.placeholder}></View>
+                  <View style={styles.placeholder}></View> // placehloder hvis billede mangler
                 )}
               </View>
               <View style={styles.cardContent}>
-                {/* Display the name */}
                 <Text>Navn: {user.name || "Henter navn..."}</Text>
                 <Text>Studielinje: {offer.studyLine}</Text>
                 <Text>Universitet: {offer.university}</Text>
                 <Text>Eksamen: {offer.exam}</Text>
                 <Text>Pris/time: {offer.price} DKK</Text>
                 <Text>Undervisningstype: {offer.type}</Text>
+                {/* knap for at vise detaljer om tilbuddet */}
                 <TouchableOpacity
                   style={styles.button}
                   onPress={() =>
@@ -143,7 +145,7 @@ const Dashboard = () => {
         })}
       </ScrollView>
 
-      {/* Add Offer button */}
+      {/* knap til at oprette et nyt opslag */}
       <TouchableOpacity
         style={styles.addButton}
         onPress={() => navigation.navigate("OfferPage")}
