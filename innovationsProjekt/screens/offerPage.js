@@ -11,20 +11,22 @@ import {
   SafeAreaView,
   Alert,
 } from "react-native";
-import { Dropdown } from "react-native-element-dropdown"; // Dropdown komponent
-import AntDesign from "@expo/vector-icons/AntDesign"; // Ikoner
-import { db, firebaseAuth } from "../firebase"; // Importer Firebase config
-import { ref, push } from "firebase/database"; // For at gemme data i databasen
+import { Dropdown } from "react-native-element-dropdown";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import { db, firebaseAuth } from "../firebase";
+import { ref, push } from "firebase/database";
 
+// hovedfunktion for tilbudsoprettelse
 const OfferPage = () => {
-  const [university, setUniversity] = useState(""); // Valgte universitet
-  const [studyLine, setStudyLine] = useState(""); // Valgte studielinje
-  const [exam, setExam] = useState(""); // Valgte eksamen
-  const [price, setPrice] = useState(""); // Valgte pris
-  const [description, setDescription] = useState(""); // Beskrivelse
-  const [selectedType, setSelectedType] = useState(null); // Undervisningstype (gruppe/individuel)
+  // state hooks til at håndtere inputfelter
+  const [university, setUniversity] = useState("");
+  const [studyLine, setStudyLine] = useState("");
+  const [exam, setExam] = useState("");
+  const [price, setPrice] = useState("");
+  const [description, setDescription] = useState("");
+  const [selectedType, setSelectedType] = useState(null);
 
-  // Prisdata (eksempel på mulige prisintervaller eller fastlagte priser)
+  // prisdata (eksempel på mulige prisintervaller eller fastlagte priser)
   const priceData = [
     { label: "175 kr/time", value: "175" },
     { label: "200 kr/time", value: "200" },
@@ -33,7 +35,7 @@ const OfferPage = () => {
     { label: "350 kr/time", value: "350" },
   ];
 
-  // Universitetsdata
+  // universitetsdata
   const universityData = [
     { label: "Aarhus Universitet (AU)", value: "au" },
     { label: "Københavns Universitet (KU)", value: "ku" },
@@ -45,7 +47,7 @@ const OfferPage = () => {
     { label: "CBS - Copenhagen Business School", value: "cbs" },
   ];
 
-  // Studielinjer til hvert universitet
+  // studielinjer til hvert universitet
   const studyLineData = {
     au: [
       { label: "Matematik", value: "math" },
@@ -84,7 +86,7 @@ const OfferPage = () => {
     ],
   };
 
-  // Eksamensdata til hver studielinje
+  // eksamensdata til hver studielinje
   const examData = {
     math: [
       { label: "Matematik 1", value: "math1" },
@@ -164,7 +166,7 @@ const OfferPage = () => {
     ],
   };
 
-  // Gem opslag i Firebase
+  // funktion til at gemme tilbud i Firebase
   const saveOfferToDatabase = async () => {
     if (
       !selectedType ||
@@ -206,7 +208,7 @@ const OfferPage = () => {
 
       Alert.alert("Succes", "Dit opslag er oprettet!");
 
-      // Ryd felterne
+      // rydder felterne
       setSelectedType(null);
       setUniversity("");
       setStudyLine("");
@@ -229,7 +231,6 @@ const OfferPage = () => {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.innerContainer}>
-            {/* Header: Gruppe/Individuel */}
             <View style={styles.headerContainer}>
               <TouchableOpacity
                 style={[
@@ -265,7 +266,7 @@ const OfferPage = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Universitet dropdown */}
+            {/* universiteters dropdown */}
             <View style={styles.pickerContainer}>
               <Text style={styles.pickerLabel}>Vælg Universitet</Text>
               <Dropdown
@@ -292,7 +293,7 @@ const OfferPage = () => {
               />
             </View>
 
-            {/* Studie-linje dropdown */}
+            {/* studielinje dropdown */}
             {university && (
               <View style={styles.pickerContainer}>
                 <Text style={styles.pickerLabel}>Vælg Studie-linje</Text>
@@ -320,7 +321,7 @@ const OfferPage = () => {
               </View>
             )}
 
-            {/* Eksamen dropdown */}
+            {/* eksamener dropdown */}
             {studyLine && (
               <View style={styles.pickerContainer}>
                 <Text style={styles.pickerLabel}>Vælg Eksamen</Text>
@@ -345,7 +346,7 @@ const OfferPage = () => {
               </View>
             )}
 
-            {/* Pris dropdown */}
+            {/* priser dropdown */}
             <View style={styles.pickerContainer}>
               <Text style={styles.pickerLabel}>Vælg Pris</Text>
               <Dropdown
@@ -368,7 +369,7 @@ const OfferPage = () => {
               />
             </View>
 
-            {/* Beskrivelse */}
+            {/* beskrivelse inputfelt */}
             <TextInput
               style={styles.textInput}
               placeholder="Beskrivelse"
@@ -378,7 +379,7 @@ const OfferPage = () => {
               onChangeText={(text) => setDescription(text)}
             />
 
-            {/* Opret opslag knap */}
+            {/* opret opslag knap */}
             <TouchableOpacity
               style={styles.button}
               onPress={saveOfferToDatabase}
@@ -393,7 +394,6 @@ const OfferPage = () => {
 };
 
 const styles = StyleSheet.create({
-  // Samme styles som før
   safeArea: { flex: 1, backgroundColor: "#fff" },
   container: { flex: 1, padding: 20 },
   scrollView: { flex: 1 },

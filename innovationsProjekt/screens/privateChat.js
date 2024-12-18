@@ -11,36 +11,41 @@ import {
 } from "react-native";
 import { getDatabase, ref, push, onValue } from "firebase/database";
 
+// komponent til privat chat
 const PrivateChat = ({ route }) => {
+  // henter chat-id og chat-navn fra ruten
   const { chatId, chatName } = route.params;
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
   const db = getDatabase();
 
   useEffect(() => {
+    // henter beskeder fra firebase-databasen
     const messagesRef = ref(db, `chats/${chatId}/messages`);
     const unsubscribe = onValue(messagesRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
+        // data til et array af beskeder
         const loadedMessages = Object.keys(data).map((key) => ({
           id: key,
           text: data[key].text,
           timestamp: data[key].timestamp,
         }));
-        setMessages(loadedMessages.reverse());
+        setMessages(loadedMessages.reverse()); // opdaterer beskederne i omvendt rækkefølge
       }
     });
-    return () => unsubscribe();
-  }, [chatId]);
+    return () => unsubscribe(); // stopper med at lytte, når komponenten unmountes
+  }, [chatId]); // kører når chatId ændres
 
   const sendMessage = () => {
+    // sender en ny besked til Firebase-databasen
     if (message.trim().length > 0) {
       const messagesRef = ref(db, `chats/${chatId}/messages`);
       push(messagesRef, {
         text: message,
         timestamp: Date.now(),
       });
-      setMessage("");
+      setMessage(""); // rydder inputfeltet efter besked er sendt
     }
   };
 
@@ -49,7 +54,10 @@ const PrivateChat = ({ route }) => {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      {/* Viser chat-navn */}
       <Text style={styles.chatName}>{chatName}</Text>
+
+      {/* Viser beskeder i en liste */}
       <FlatList
         data={messages}
         keyExtractor={(item) => item.id}
@@ -58,14 +66,15 @@ const PrivateChat = ({ route }) => {
             {item.text.includes("**") ? (
               <Text style={styles.messageText}>
                 <Text style={styles.boldText}>
-                  {item.text.split("**")[1]} {/* Fed tekst */}
+                  {item.text.split("**")[1]} {/* fed tekst */}
                 </Text>
                 {"\n\n"}
-                {item.text.split("**")[2]} {/* Brugerbeskeden */}
+                {item.text.split("**")[2]} {/* bruger beksed */}
               </Text>
             ) : (
               <Text style={styles.messageText}>{item.text}</Text>
             )}
+            {/* viser tidspunkt for beskeden */}
             <Text style={styles.timestamp}>
               {new Date(item.timestamp).toLocaleTimeString()}
             </Text>
@@ -74,12 +83,13 @@ const PrivateChat = ({ route }) => {
         inverted
       />
 
+      {/* inputfelt og send knap */}
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
           placeholder="Skriv din besked..."
           value={message}
-          onChangeText={setMessage}
+          onChangeText={setMessage} // opdaterer beskedinput
         />
         <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
           <Text style={styles.sendButtonText}>Send</Text>

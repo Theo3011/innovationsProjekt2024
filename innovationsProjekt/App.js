@@ -1,4 +1,4 @@
-// Import nødvendige moduler
+// Import af moduler
 import React from "react";
 import { StatusBar } from "expo-status-bar";
 import { NavigationContainer } from "@react-navigation/native";
@@ -6,7 +6,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 
-// Import af screen fra mappen
+// import af hver screen fra mappen screens
 import LoginCreatePage from "./screens/loginCreatePage";
 import DashBoard from "./screens/dashBoard";
 import ChatPage from "./screens/chatPage";
@@ -17,11 +17,11 @@ import PrivateChat from "./screens/privateChat";
 import viewOffer from "./screens/viewOffer";
 import BookSession from "./screens/bookSession";
 
-// Initialiser navigatører
+// definering af stack of tab
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// AppTabs komponenten for bundenavigation
+// tabnavigator - og deres værdier
 function AppTabs() {
   return (
     <Tab.Navigator
@@ -66,7 +66,7 @@ function AppTabs() {
   );
 }
 
-// App komponenten med stack navigation
+// stack navigator - som har en start route (loginCreatePage), dermed så starter brugeren altid på login-siden
 export default function App() {
   return (
     <NavigationContainer>
@@ -82,7 +82,7 @@ export default function App() {
           options={{ title: "TutorMatch" }}
         />
         <Stack.Screen
-          name="OfferPage" // Tilføj opslag som en stack-skærm
+          name="OfferPage" 
           component={OfferPage}
           options={{ title: "Tilføj opslag" }}
         />

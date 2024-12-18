@@ -1,3 +1,4 @@
+// Importer nødvendige moduler og komponenter
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -10,47 +11,53 @@ import { getDatabase, ref, onValue } from "firebase/database";
 import { useNavigation } from "@react-navigation/native";
 
 const ChatPage = () => {
+  // opretter states til at gemme chats
   const [chats, setChats] = useState([]);
   const navigation = useNavigation();
   const db = getDatabase();
 
+  // henter chats fra Firebase-databasen ved hjælp af useEffect
   useEffect(() => {
-    const chatsRef = ref(db, "chats");
+    const chatsRef = ref(db, "chats"); // reference til chats i databasen
     const unsubscribe = onValue(chatsRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
+        // konverter chats til et array med nødvendige oplysninger
         const loadedChats = Object.keys(data).map((key) => {
           const messages = data[key].messages || {};
           const messageArray = Object.values(messages);
 
+          // finder den nyeste besked
           const latestMessageObj =
             messageArray.length > 0
               ? messageArray.sort((a, b) => b.timestamp - a.timestamp)[0]
               : null;
 
           return {
-            id: key,
-            name: data[key].name || "Ingen navn",
-            author: data[key].author || "Ukendt",
-            latestMessage: latestMessageObj?.text || "Ingen besked endnu",
+            id: key, // Chat-id
+            name: data[key].name || "Ingen navn", // Chat-navn
+            author: data[key].author || "Ukendt", // Forfatter
+            latestMessage: latestMessageObj?.text || "Ingen besked endnu", // Seneste besked
             timestamp: latestMessageObj
               ? new Date(latestMessageObj.timestamp).toLocaleTimeString([], {
                   hour: "2-digit",
                   minute: "2-digit",
                 })
-              : "",
+              : "", // tidsstempel for seneste besked
           };
         });
         setChats(loadedChats);
       }
     });
-    return () => unsubscribe();
+    return () => unsubscribe(); // ryd op efter useEffect
   }, []);
 
+  // navigerer til en specifik chat ved tryk
   const handleChatPress = (chatId, chatName) => {
     navigation.navigate("PrivateChat", { chatId, chatName });
   };
 
+  // formaterer tekst med fed skrift for dele omgivet af **, dette er brugt til at sørge for når en anmodning kommer ind, fremstår den mere tydeligt
   const parseText = (text) => {
     const parts = text.split("**");
     return parts.map((part, index) => {
@@ -69,12 +76,12 @@ const ChatPage = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Chat</Text>
       <FlatList
-        data={chats}
-        keyExtractor={(item) => item.id}
+        data={chats} // henter chat-data
+        keyExtractor={(item) => item.id} // Unik nøgle for hver chat
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.chatItem}
-            onPress={() => handleChatPress(item.id, item.name)}
+            onPress={() => handleChatPress(item.id, item.name)} // håndterer tryk på chat
           >
             <View style={styles.chatDetails}>
               <Text style={styles.chatAuthor}>Skriver: {item.author}</Text>
