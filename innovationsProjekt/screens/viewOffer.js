@@ -20,7 +20,7 @@ const ViewOffer = ({ route }) => {
     price,
     type,
     description,
-    receiverId, 
+    receiverId,
     imageUrl, 
     createdByUserId, // ID på den bruger der har oprettet opslaget
   } = route.params; 
