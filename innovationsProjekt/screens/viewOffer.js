@@ -71,7 +71,7 @@ const ViewOffer = ({ route }) => {
         timestamp: Date.now(),
       };
 
-      // Gem chatdata i Firebase
+      // Gemmer chatdataen i Firebase
       await set(newChatRef, chatData); 
 
       // Naviger til PrivateChat og send chatId og tutorens navn
